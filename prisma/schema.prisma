@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String              @id @default(uuid())
+  email             String              @unique
+  name              String
+  role              Role                @default(MEMBER)
+  mentor_id         String?
+  mentor            User?               @relation("Mentorship", fields: [mentor_id], references: [id])
+  mentees           User[]              @relation("Mentorship")
+  congregation_id   String?
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  Group             Group[]
+  GeneralAttendance GeneralAttendance[]
+  ConnectAttendance ConnectAttendance[]
+}
+
+model Group {
+  id                String              @id @default(uuid())
+  name              String
+  leader_id         String
+  leader            User                @relation(fields: [leader_id], references: [id])
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  ConnectAttendance ConnectAttendance[]
+}
+
+model GeneralAttendance {
+  id         String   @id @default(uuid())
+  event_name String // Name of the general event
+  user_id    String // Tracks which user attended
+  user       User     @relation(fields: [user_id], references: [id])
+  date       DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model ConnectAttendance {
+  id         String   @id @default(uuid())
+  group_id   String // Connect Group
+  group      Group    @relation(fields: [group_id], references: [id])
+  mentor_id  String // Mentor responsible for the attendance
+  mentor     User     @relation(fields: [mentor_id], references: [id])
+  location   String? // Place where the meet occurs
+  photo_url  String? // Documentation photo
+  date       DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  MENTOR
+  MEMBER
+}
