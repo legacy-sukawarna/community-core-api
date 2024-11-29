@@ -11,18 +11,21 @@ async function main() {
         email: 'admin@example.com',
         name: 'Admin User',
         role: 'ADMIN',
+        phone: '092812345',
       },
       {
         id: '2',
         email: 'mentor@example.com',
         name: 'Mentor User',
         role: 'MENTOR',
+        phone: '092812345',
       },
       {
         id: '3',
         email: 'member@example.com',
         name: 'Member User',
         role: 'MEMBER',
+        phone: '092812345',
       },
     ],
   });

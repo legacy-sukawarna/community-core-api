@@ -16,6 +16,7 @@ model User {
   mentor            User?               @relation("Mentorship", fields: [mentor_id], references: [id])
   mentees           User[]              @relation("Mentorship")
   congregation_id   String?
+  phone             String
   created_at        DateTime            @default(now())
   updated_at        DateTime            @updatedAt
   Group             Group[]
