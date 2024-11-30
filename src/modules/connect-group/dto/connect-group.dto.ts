@@ -11,7 +11,7 @@ export class CreateGroupDto {
   name: string;
 
   @IsString()
-  leader_id: string;
+  mentor_id: string;
 
   @IsArray()
   @ArrayNotEmpty()
@@ -26,7 +26,7 @@ export class UpdateGroupDto {
 
   @IsOptional()
   @IsString()
-  leader_id: string;
+  mentor_id: string;
 
   @IsArray()
   @IsOptional()

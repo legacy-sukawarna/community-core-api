@@ -49,7 +49,7 @@ export class ConnectGroupController {
 
   @ApiOperation({ summary: 'Get all Connect Groups or filter by leader' })
   @ApiQuery({
-    name: 'leader_id',
+    name: 'mentor_id',
     required: false,
     description: 'Filter by leader ID',
   })
@@ -58,9 +58,9 @@ export class ConnectGroupController {
     description: 'List of Connect Groups retrieved successfully',
   })
   @Get()
-  async getGroups(@Query('leader_id') leader_id?: string) {
+  async getGroups(@Query('mentor_id') mentor_id?: string) {
     return this.connectGroupService.getGroups(
-      leader_id ? { leader_id } : undefined,
+      mentor_id ? { mentor_id } : undefined,
     );
   }
 

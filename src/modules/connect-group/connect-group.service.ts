@@ -11,8 +11,8 @@ export class ConnectGroupService {
     return this.prisma.group.create({
       data: {
         name: data.name,
-        leader_id: data.leader_id,
-        Users: {
+        mentor_id: data.mentor_id,
+        mentees: {
           connect: data.mentee_id.map((id) => ({ id })),
         },
       },
@@ -20,10 +20,10 @@ export class ConnectGroupService {
   }
 
   // Get all groups or filter by leader ID
-  async getGroups(filter?: { leader_id?: string }) {
+  async getGroups(filter?: { mentor_id?: string }) {
     return this.prisma.group.findMany({
       include: {
-        Users: true,
+        mentees: true,
       },
       where: filter,
       orderBy: { created_at: 'desc' },
@@ -50,8 +50,8 @@ export class ConnectGroupService {
       where: { id },
       data: {
         name: data.name,
-        leader_id: data.leader_id,
-        Users: {
+        mentor_id: data.mentor_id,
+        mentees: {
           set: data.mentee_id.map((id) => ({ id })),
         },
       },

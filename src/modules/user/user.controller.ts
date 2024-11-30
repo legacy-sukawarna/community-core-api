@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from 'src/modules/auth/auth.guard';
 import { UserService } from './user.service';
-import { Role } from '@prisma/client';
+import { Gender, Role } from '@prisma/client';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -93,7 +93,7 @@ export class UserController {
   @Patch(':id')
   async updateUser(
     @Param('id') id: string,
-    @Body() body: { phone?: string; congregation_id?: string; gender?: string },
+    @Body() body: { phone?: string; congregation_id?: string; gender?: Gender },
   ) {
     return this.userService.updateUser(id, body);
   }
