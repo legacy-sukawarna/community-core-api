@@ -1,28 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateGroupDto, UpdateGroupDto } from './dto/connect-group.dto';
 
 @Injectable()
 export class ConnectGroupService {
   constructor(private readonly prisma: PrismaService) {}
 
   // Create a new Connect Group
-  async createGroup(data: { name: string; leaderId: string }) {
+  async createGroup(data: CreateGroupDto) {
     return this.prisma.group.create({
       data: {
         name: data.name,
-        leader: { connect: { id: data.leaderId } },
+        leader_id: data.leader_id,
+        Users: {
+          connect: data.mentee_id.map((id) => ({ id })),
+        },
       },
     });
   }
 
   // Get all groups or filter by leader ID
-  async getGroups(filter?: { leaderId?: string }) {
-    const whereClause = filter?.leaderId
-      ? { leader: { id: filter.leaderId } } // Map leaderId to the related leader field
-      : {};
-
+  async getGroups(filter?: { leader_id?: string }) {
     return this.prisma.group.findMany({
-      where: whereClause,
+      include: {
+        Users: true,
+      },
+      where: filter,
       orderBy: { created_at: 'desc' },
     });
   }
@@ -37,7 +40,7 @@ export class ConnectGroupService {
   }
 
   // Update a group by ID
-  async updateGroup(id: string, data: { name?: string; leaderId?: string }) {
+  async updateGroup(id: string, data: UpdateGroupDto) {
     const group = await this.prisma.group.findUnique({ where: { id } });
     if (!group) {
       throw new NotFoundException(`Group with ID ${id} not found`);
@@ -45,7 +48,13 @@ export class ConnectGroupService {
 
     return this.prisma.group.update({
       where: { id },
-      data,
+      data: {
+        name: data.name,
+        leader_id: data.leader_id,
+        Users: {
+          set: data.mentee_id.map((id) => ({ id })),
+        },
+      },
     });
   }
 

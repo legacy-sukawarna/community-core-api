@@ -8,31 +8,34 @@ datasource db {
 }
 
 model User {
-  id                String              @id @default(uuid())
-  email             String              @unique
-  name              String
-  role              Role                @default(MEMBER)
-  mentor_id         String?
-  congregation_id   String?
-  phone             String              @db.VarChar(15)
-  created_at        DateTime            @default(now())
-  updated_at        DateTime            @updatedAt
-  gender            String?             @db.VarChar(10)
-  ConnectAttendance ConnectAttendance[]
-  GeneralAttendance GeneralAttendance[]
-  Group             Group[]
-  mentor            User?               @relation("Mentorship", fields: [mentor_id], references: [id])
-  mentees           User[]              @relation("Mentorship")
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  name               String
+  role               Role                @default(MEMBER)
+  mentor_id          String?
+  congregation_id    String?
+  phone              String              @db.VarChar(15)
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  gender             String?             @db.VarChar(10)
+  connect_attendance ConnectAttendance[]
+  general_attendance GeneralAttendance[]
+  Group              Group?              @relation("UserGroup", fields: [groupId], references: [id])
+  mentor             User?               @relation("Mentorship", fields: [mentor_id], references: [id])
+  mentees            User[]              @relation("Mentorship")
+  groupId            String?
+  leaderOfGroups     Group[]             @relation("Group Leader")
 }
 
 model Group {
-  id                String              @id @default(uuid())
-  name              String
-  leader_id         String
-  created_at        DateTime            @default(now())
-  updated_at        DateTime            @updatedAt
-  ConnectAttendance ConnectAttendance[]
-  leader            User                @relation(fields: [leader_id], references: [id])
+  id                 String              @id @default(uuid())
+  name               String              @unique
+  leader_id          String
+  leader             User                @relation("Group Leader", fields: [leader_id], references: [id])
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  connect_attendance ConnectAttendance[]
+  Users              User[]              @relation("UserGroup")
 }
 
 model GeneralAttendance {

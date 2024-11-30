@@ -20,6 +20,7 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
+import { CreateGroupDto, UpdateGroupDto } from './dto/connect-group.dto';
 
 @ApiTags('ConnectGroups')
 @ApiBearerAuth()
@@ -33,7 +34,7 @@ export class ConnectGroupController {
     schema: {
       example: {
         name: 'Group Alpha',
-        leaderId: 'user-123',
+        leader_id: 'user-123',
       },
     },
   })
@@ -42,13 +43,13 @@ export class ConnectGroupController {
     description: 'Connect Group created successfully',
   })
   @Post()
-  async createGroup(@Body() body: { name: string; leaderId: string }) {
+  async createGroup(@Body() body: CreateGroupDto) {
     return this.connectGroupService.createGroup(body);
   }
 
   @ApiOperation({ summary: 'Get all Connect Groups or filter by leader' })
   @ApiQuery({
-    name: 'leaderId',
+    name: 'leader_id',
     required: false,
     description: 'Filter by leader ID',
   })
@@ -57,9 +58,9 @@ export class ConnectGroupController {
     description: 'List of Connect Groups retrieved successfully',
   })
   @Get()
-  async getGroups(@Query('leaderId') leaderId?: string) {
+  async getGroups(@Query('leader_id') leader_id?: string) {
     return this.connectGroupService.getGroups(
-      leaderId ? { leaderId } : undefined,
+      leader_id ? { leader_id } : undefined,
     );
   }
 
@@ -81,7 +82,7 @@ export class ConnectGroupController {
     schema: {
       example: {
         name: 'Updated Group Name',
-        leaderId: 'new-leader-123',
+        leader_id: 'new-leader-123',
       },
     },
   })
@@ -91,10 +92,7 @@ export class ConnectGroupController {
   })
   @ApiResponse({ status: 404, description: 'Connect Group not found' })
   @Put(':id')
-  async updateGroup(
-    @Param('id') id: string,
-    @Body() body: { name?: string; leaderId?: string },
-  ) {
+  async updateGroup(@Param('id') id: string, @Body() body: UpdateGroupDto) {
     return this.connectGroupService.updateGroup(id, body);
   }
 

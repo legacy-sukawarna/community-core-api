@@ -33,7 +33,7 @@ async function main() {
   // Seed Groups
   await prisma.group.createMany({
     data: [
-      { id: 'g1', name: 'Connect Group 1', leader_id: '2' }, // Leader is the Mentor User
+      { id: 'g1', name: 'Connect Group 1', leader_id: '1' }, // Leader is the Mentor User
       { id: 'g2', name: 'Connect Group 2', leader_id: '2' },
     ],
   });
