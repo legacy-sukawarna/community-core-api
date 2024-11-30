@@ -25,4 +25,16 @@ export class SupabaseService {
     if (error) throw new Error(error.message);
     return data.url;
   }
+
+  async refreshToken(refreshToken: string) {
+    const { data, error } = await this.supabase.auth.refreshSession({
+      refresh_token: refreshToken,
+    });
+
+    if (error) {
+      throw new Error(`Failed to refresh session: ${error.message}`);
+    }
+
+    return data.session; // Contains new access_token and refresh_token
+  }
 }

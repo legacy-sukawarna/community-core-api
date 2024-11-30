@@ -67,7 +67,7 @@ export class UserService {
 
   async updateUser(
     userId: string,
-    updateData: { phone?: string; congregation_id?: string },
+    updateData: { phone?: string; congregation_id?: string; gender?: string },
   ) {
     return this.prisma.user.update({
       where: { id: userId },

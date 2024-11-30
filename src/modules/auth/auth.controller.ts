@@ -1,8 +1,15 @@
-import { Controller, Get, Query, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SentryService } from 'src/logging/sentry.service';
 import { SupabaseService } from 'src/services/supabase/supabase.service';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 
 @ApiTags('Auth') // Group endpoints under 'Auth'
 @Controller('auth')
@@ -69,5 +76,14 @@ export class AuthController {
       // Re-throw the error to ensure it's handled by global exception filters
       throw error;
     }
+  }
+
+  @Post('refresh-token')
+  async refreshToken(@Body('refresh_token') refreshToken: string) {
+    const session = await this.supabaseService.refreshToken(refreshToken);
+    return {
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    };
   }
 }

@@ -4,7 +4,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { SentryExceptionFilter } from './logging/exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger:
+      process.env.NODE_ENV === 'development'
+        ? ['log', 'debug', 'error', 'verbose', 'warn']
+        : ['log', 'error', 'warn'],
+  });
 
   // Swagger configuration
   const config = new DocumentBuilder()

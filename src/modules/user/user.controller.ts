@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from 'src/modules/auth/auth.guard';
 import { UserService } from './user.service';
 import { Role } from '@prisma/client';
 import {
@@ -21,14 +21,17 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { RolesGuard } from 'src/guard/role.guard';
+import { Roles } from 'src/guard/roles.decorator';
 
 @ApiTags('User')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Roles('ADMIN', 'MENTOR')
   @ApiOperation({ summary: 'List all users or filter by role' })
   @ApiQuery({
     name: 'role',
@@ -45,6 +48,7 @@ export class UserController {
     return this.userService.listUsers(role ? { role } : undefined);
   }
 
+  @Roles('ADMIN', 'MENTOR')
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User data retrieved successfully' })
@@ -54,6 +58,7 @@ export class UserController {
     return this.userService.findUserById(id);
   }
 
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Assign a role to a user' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'Role assigned successfully' })
@@ -63,6 +68,7 @@ export class UserController {
     return this.userService.assignRole(id, role);
   }
 
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Delete a user by ID' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
@@ -87,7 +93,7 @@ export class UserController {
   @Patch(':id')
   async updateUser(
     @Param('id') id: string,
-    @Body() body: { phone?: string; congregation_id?: string },
+    @Body() body: { phone?: string; congregation_id?: string; gender?: string },
   ) {
     return this.userService.updateUser(id, body);
   }
