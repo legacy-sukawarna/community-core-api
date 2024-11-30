@@ -1,92 +1,142 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Seed Users
-  await prisma.user.createMany({
+  console.log('Start seeding...');
+
+  // Create Users (including Mentors)
+  const mentorAlice = await prisma.user.create({
+    data: {
+      email: 'mentor.alice@example.com',
+      name: 'Alice Mentor',
+      role: Role.MENTOR,
+      gender: 'FEMALE',
+      phone: '1234567890',
+    },
+  });
+
+  const mentorBob = await prisma.user.create({
+    data: {
+      email: 'mentor.bob@example.com',
+      name: 'Bob Mentor',
+      role: Role.MENTOR,
+      gender: 'MALE',
+      phone: '0987654321',
+    },
+  });
+
+  const memberCharlie = await prisma.user.create({
+    data: {
+      email: 'charlie@example.com',
+      name: 'Charlie',
+      role: Role.MEMBER,
+      gender: 'MALE',
+      phone: '5555555555',
+    },
+  });
+
+  const memberDiana = await prisma.user.create({
+    data: {
+      email: 'diana@example.com',
+      name: 'Diana',
+      role: Role.MEMBER,
+      gender: 'FEMALE',
+      phone: '4444444444',
+    },
+  });
+
+  // Create Groups and Assign Mentors
+  const groupAlpha = await prisma.group.create({
+    data: {
+      name: 'Group Alpha',
+      mentor_id: mentorAlice.id,
+    },
+  });
+
+  const groupBeta = await prisma.group.create({
+    data: {
+      name: 'Group Beta',
+      mentor_id: mentorBob.id,
+    },
+  });
+
+  // Assign Mentees to Groups
+  await prisma.user.update({
+    where: { id: memberCharlie.id },
+    data: { group_id: groupAlpha.id },
+  });
+
+  await prisma.user.update({
+    where: { id: memberDiana.id },
+    data: { group_id: groupBeta.id },
+  });
+
+  // Create Events
+  const event1 = await prisma.event.create({
+    data: {
+      name: 'Community Gathering',
+      date: new Date('2024-12-10'),
+    },
+  });
+
+  const event2 = await prisma.event.create({
+    data: {
+      name: 'Annual Meetup',
+      date: new Date('2024-12-15'),
+    },
+  });
+
+  // Record Event Attendance
+  await prisma.eventAttendance.createMany({
     data: [
       {
-        id: '1',
-        email: 'admin@example.com',
-        name: 'Admin User',
-        role: 'ADMIN',
-        phone: '092812345',
+        user_id: mentorAlice.id,
+        event_id: event1.id,
       },
       {
-        id: '2',
-        email: 'mentor@example.com',
-        name: 'Mentor User',
-        role: 'MENTOR',
-        phone: '092812345',
+        user_id: memberCharlie.id,
+        event_id: event1.id,
       },
       {
-        id: '3',
-        email: 'member@example.com',
-        name: 'Member User',
-        role: 'MEMBER',
-        phone: '092812345',
+        user_id: mentorBob.id,
+        event_id: event2.id,
+      },
+      {
+        user_id: memberDiana.id,
+        event_id: event2.id,
       },
     ],
   });
 
-  // Seed Groups
-  await prisma.group.createMany({
-    data: [
-      { id: 'g1', name: 'Connect Group 1', leader_id: '1' }, // Leader is the Mentor User
-      { id: 'g2', name: 'Connect Group 2', leader_id: '2' },
-    ],
+  // Create Connect Attendance
+  await prisma.connectAttendance.create({
+    data: {
+      group_id: groupAlpha.id,
+      location: 'Community Center A',
+      photo_url: 'https://example.com/photo1.jpg',
+      date: new Date('2024-12-01'),
+    },
   });
 
-  // Seed Connect Attendance
-  await prisma.connectAttendance.createMany({
-    data: [
-      {
-        id: 'ca1',
-        group_id: 'g1',
-        mentor_id: '2', // Mentor responsible
-        location: 'Church Hall A',
-        photo_url: 'https://example.com/photo1.jpg',
-        date: new Date('2024-01-01'),
-      },
-      {
-        id: 'ca2',
-        group_id: 'g2',
-        mentor_id: '2', // Mentor responsible
-        location: 'Church Hall B',
-        photo_url: 'https://example.com/photo2.jpg',
-        date: new Date('2024-01-02'),
-      },
-    ],
+  await prisma.connectAttendance.create({
+    data: {
+      group_id: groupBeta.id,
+      location: 'Community Center B',
+      photo_url: 'https://example.com/photo2.jpg',
+      date: new Date('2024-12-02'),
+    },
   });
 
-  // Seed General Attendance
-  await prisma.generalAttendance.createMany({
-    data: [
-      {
-        id: 'ga1',
-        event_name: 'Seminar on Faith',
-        user_id: '3', // Member User
-        date: new Date('2024-01-03'),
-      },
-      {
-        id: 'ga2',
-        event_name: 'Prayer Night',
-        user_id: '3',
-        date: new Date('2024-01-04'),
-      },
-    ],
-  });
+  console.log('Seeding finished.');
 }
 
 main()
-  .then(() => {
-    console.log('Seeding completed!');
-  })
-  .catch((e) => {
-    console.error('Error seeding database:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
   });

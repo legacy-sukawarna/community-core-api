@@ -8,57 +8,61 @@ datasource db {
 }
 
 model User {
-  id                 String              @id @default(uuid())
-  email              String              @unique
-  name               String
-  role               Role                @default(MEMBER)
-  mentor_id          String?
-  congregation_id    String?
-  phone              String              @db.VarChar(15)
-  created_at         DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
-  gender             String?             @db.VarChar(10)
-  connect_attendance ConnectAttendance[]
-  general_attendance GeneralAttendance[]
-  Group              Group?              @relation("UserGroup", fields: [groupId], references: [id])
-  mentor             User?               @relation("Mentorship", fields: [mentor_id], references: [id])
-  mentees            User[]              @relation("Mentorship")
-  groupId            String?
-  leaderOfGroups     Group[]             @relation("Group Leader")
+  id              String            @id @default(uuid())
+  email           String            @unique
+  name            String
+  role            Role              @default(MEMBER)
+  congregation_id String?
+  phone           String            @db.VarChar(15)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  gender          Gender?
+  group_id        String?
+  group           Group?            @relation("GroupMentees", fields: [group_id], references: [id])
+  EventAttendance EventAttendance[]
+  mentoredGroups  Group[]           @relation("MentoredGroups")
 }
 
 model Group {
   id                 String              @id @default(uuid())
   name               String              @unique
-  leader_id          String
-  leader             User                @relation("Group Leader", fields: [leader_id], references: [id])
+  mentor_id          String
+  mentor             User                @relation("MentoredGroups", fields: [mentor_id], references: [id])
   created_at         DateTime            @default(now())
   updated_at         DateTime            @updatedAt
   connect_attendance ConnectAttendance[]
-  Users              User[]              @relation("UserGroup")
+  mentees            User[]              @relation("GroupMentees")
 }
 
-model GeneralAttendance {
-  id         String   @id @default(uuid())
-  event_name String
-  user_id    String
-  date       DateTime
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  user       User     @relation(fields: [user_id], references: [id])
+model Event {
+  id              String            @id @default(uuid())
+  name            String
+  date            DateTime
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  EventAttendance EventAttendance[]
 }
 
 model ConnectAttendance {
   id         String   @id @default(uuid())
   group_id   String
-  mentor_id  String
   location   String?
   photo_url  String?
   date       DateTime
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   group      Group    @relation(fields: [group_id], references: [id])
-  mentor     User     @relation(fields: [mentor_id], references: [id])
+}
+
+model EventAttendance {
+  id          String   @id @default(uuid())
+  user_id     String
+  event_id    String
+  attended_at DateTime @default(now()) // Optional: Timestamp for attendance
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  User        User     @relation(fields: [user_id], references: [id])
+  Event       Event    @relation(fields: [event_id], references: [id])
 }
 
 enum Role {
