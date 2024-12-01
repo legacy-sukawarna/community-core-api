@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { SentryExceptionFilter } from './logging/exception.filter';
+import * as Sentry from '@sentry/node';
+import { SentryLogger } from './logging/logging.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -10,6 +12,16 @@ async function bootstrap() {
         ? ['log', 'debug', 'error', 'verbose', 'warn']
         : ['log', 'error', 'warn'],
   });
+
+  if (process.env.NODE_ENV !== 'development') {
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
+      environment: process.env.NODE_ENV,
+    });
+  }
+
+  app.useLogger(new SentryLogger());
 
   // Swagger configuration
   const config = new DocumentBuilder()

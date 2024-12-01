@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Gender, Role } from '@prisma/client';
 
 @Injectable()
 export class UserService {
+  logger = new Logger('UserService');
+
   constructor(private readonly prisma: PrismaService) {}
 
   async upsertUser(userData: {
@@ -54,6 +56,7 @@ export class UserService {
 
   // List users with optional filters
   async listUsers(filter?: { role?: Role }) {
+    this.logger.log(`Listing users with filter: ${JSON.stringify(filter)}`);
     return this.prisma.user.findMany({
       where: filter || {},
       orderBy: { created_at: 'desc' },

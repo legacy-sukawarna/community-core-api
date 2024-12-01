@@ -2,22 +2,23 @@ import {
   Body,
   Controller,
   Get,
+  Logger,
   Post,
   Query,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { SentryService } from 'src/logging/sentry.service';
 import { SupabaseService } from 'src/services/supabase/supabase.service';
 import { UserService } from '../user/user.service';
 
 @ApiTags('Auth') // Group endpoints under 'Auth'
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly userService: UserService,
-    private readonly sentryService: SentryService,
   ) {}
 
   @Get('google')
@@ -25,10 +26,9 @@ export class AuthController {
   async redirectToGoogle() {
     try {
       const loginUrl = await this.supabaseService.signInWithOAuth('google');
-      this.sentryService.captureMessage('Google login URL generated', 'info');
       return { loginUrl };
     } catch (error) {
-      this.sentryService.captureException(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -48,8 +48,6 @@ export class AuthController {
       }
 
       const { user } = await this.supabaseService.getUser(accessToken);
-
-      this.sentryService.captureMessage(`User fetched: ${user.email}`, 'info');
 
       // Upsert the user in your database
       const savedUser = await this.userService.upsertUser({
@@ -71,7 +69,7 @@ export class AuthController {
       };
     } catch (error) {
       // Capture the exception in Sentry
-      this.sentryService.captureException(error);
+      this.logger.error(error);
 
       // Re-throw the error to ensure it's handled by global exception filters
       throw error;

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { SentryService } from './sentry.service';
+import { SentryLogger } from './logging.service';
 
 @Module({
-  providers: [SentryService],
-  exports: [SentryService],
+  providers: [SentryLogger],
+  exports: [SentryLogger],
 })
 export class LoggingModule {}
