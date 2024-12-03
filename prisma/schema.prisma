@@ -18,20 +18,22 @@ model User {
   updated_at      DateTime          @updatedAt
   gender          Gender?
   group_id        String?
-  group           Group?            @relation("GroupMentees", fields: [group_id], references: [id])
+  group           Group?            @relation("Mentees", fields: [group_id], references: [id])
   EventAttendance EventAttendance[]
-  mentoredGroups  Group[]           @relation("MentoredGroups")
+  mentoredGroups  Group[]           @relation("MentorGroups")
 }
 
 model Group {
   id                 String              @id @default(uuid())
   name               String              @unique
   mentor_id          String
-  mentor             User                @relation("MentoredGroups", fields: [mentor_id], references: [id])
+  mentor             User                @relation("MentorGroups", fields: [mentor_id], references: [id])
   created_at         DateTime            @default(now())
   updated_at         DateTime            @updatedAt
   connect_attendance ConnectAttendance[]
-  mentees            User[]              @relation("GroupMentees")
+  mentees            User[]              @relation("Mentees")
+
+  @@index([mentor_id])
 }
 
 model Event {
@@ -46,12 +48,15 @@ model Event {
 model ConnectAttendance {
   id         String   @id @default(uuid())
   group_id   String
-  location   String?
+  notes      String?
   photo_url  String?
-  date       DateTime
+  date       DateTime @db.Date
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   group      Group    @relation(fields: [group_id], references: [id])
+
+  @@index([date]) // Index for filtering by date
+  @@index([group_id])
 }
 
 model EventAttendance {
@@ -61,8 +66,10 @@ model EventAttendance {
   attended_at DateTime @default(now()) // Optional: Timestamp for attendance
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
-  User        User     @relation(fields: [user_id], references: [id])
-  Event       Event    @relation(fields: [event_id], references: [id])
+  user        User     @relation(fields: [user_id], references: [id])
+  event       Event    @relation(fields: [event_id], references: [id])
+
+  @@index([user_id, event_id]) // For efficient lookups by user and event
 }
 
 enum Role {

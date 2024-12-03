@@ -6,7 +6,11 @@ import {
   Query,
   Body,
   UseGuards,
+  Put,
+  Delete,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ConnectAttendanceService } from './connect-attendance.service';
 import { AuthGuard } from '../auth/auth.guard';
 import {
@@ -17,11 +21,17 @@ import {
   ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
+import { CreateAttendanceDto } from './dto/connect-attendance.dto';
+import { RolesGuard } from 'src/guard/role.guard';
+import { Roles } from 'src/guard/roles.decorator';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @ApiTags('ConnectAttendance')
 @ApiBearerAuth() // Indicates that JWT is required
 @Controller('connect-attendance')
-@UseGuards(AuthGuard) // Protect all routes with AuthGuard
+@UseGuards(AuthGuard, RolesGuard) // Protect all routes with AuthGuard
+@Roles('ADMIN', 'MENTOR')
 export class ConnectAttendanceController {
   constructor(
     private readonly connectAttendanceService: ConnectAttendanceService,
@@ -32,8 +42,7 @@ export class ConnectAttendanceController {
     schema: {
       example: {
         group_id: 'group-123',
-        mentor_id: 'mentor-123',
-        location: 'Church Hall A',
+        notes: 'Church Hall A',
         photo_url: 'https://example.com/photo.jpg',
         date: '2024-01-01T10:00:00Z',
       },
@@ -46,18 +55,9 @@ export class ConnectAttendanceController {
   @Post()
   async createAttendance(
     @Body()
-    body: {
-      group_id: string;
-      mentor_id: string;
-      location: string;
-      photo_url?: string;
-      date: string;
-    },
+    body: CreateAttendanceDto,
   ) {
-    return this.connectAttendanceService.createAttendance({
-      ...body,
-      date: new Date(body.date),
-    });
+    return this.connectAttendanceService.createAttendance(body);
   }
 
   @ApiOperation({ summary: 'Get attendance records' })
@@ -83,24 +83,83 @@ export class ConnectAttendanceController {
   @Get()
   async getAttendance(
     @Query('group_id') group_id?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
+    @Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,
   ) {
     return this.connectAttendanceService.getAttendance({
       group_id,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      start_date: start_date ? new Date(start_date) : undefined,
+      end_date: end_date ? new Date(end_date) : undefined,
     });
   }
 
-  @ApiOperation({ summary: 'Get attendance record by ID' })
+  @ApiOperation({ summary: 'Get attendance details' })
   @ApiResponse({
     status: 200,
     description: 'Attendance record retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'Attendance record not found' })
   @Get(':id')
-  async getAttendanceById(@Param('id') id: string) {
-    return this.connectAttendanceService.getAttendanceById(id);
+  async getDetails(@Param('id') id: string) {
+    return this.connectAttendanceService.getAttendanceDetails(id);
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() body: { notes?: string; photo_url?: string; date?: Date },
+  ) {
+    return await this.connectAttendanceService.updateAttendance(id, body);
+  }
+
+  @Roles('ADMIN')
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return await this.connectAttendanceService.deleteAttendance(id);
+  }
+
+  @Get('/report/generate')
+  async getReport(
+    @Query('start_date') start_date: string,
+    @Query('end_date') end_date: string,
+    @Query('format') format: 'pdf' | 'sheet',
+    @Res() res: Response,
+  ) {
+    const report = await this.connectAttendanceService.generateReport(
+      new Date(start_date),
+      new Date(end_date),
+    );
+
+    if (format === 'sheet') {
+      const filePath =
+        await this.connectAttendanceService.generateExcelSheet(report);
+
+      // Set headers for file download
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${path.basename(filePath)}"`,
+      );
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+
+      // Stream the file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+
+      // Clean up the file after download
+      fileStream.on('end', () => {
+        fs.unlinkSync(filePath);
+      });
+      return;
+    }
+
+    if (format === 'pdf') {
+      const file = await this.connectAttendanceService.generatePDF(report);
+      return res.download(file); // Provide PDF as a download
+    }
+
+    return res.status(400).json({ message: 'Invalid format' });
   }
 }

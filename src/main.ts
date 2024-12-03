@@ -1,9 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { SentryExceptionFilter } from './logging/exception.filter';
 import * as Sentry from '@sentry/node';
 import { SentryLogger } from './logging/logging.service';
+import { VersioningType } from '@nestjs/common';
+import { AllExceptionsFilter } from './lib/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -11,6 +12,11 @@ async function bootstrap() {
       process.env.NODE_ENV === 'development'
         ? ['log', 'debug', 'error', 'verbose', 'warn']
         : ['log', 'error', 'warn'],
+  });
+
+  // Enable versioning
+  app.enableVersioning({
+    type: VersioningType.URI, // This will add /v1, /v2 etc. to URLs
   });
 
   if (process.env.NODE_ENV !== 'development') {
@@ -22,6 +28,7 @@ async function bootstrap() {
   }
 
   app.useLogger(new SentryLogger());
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Swagger configuration
   const config = new DocumentBuilder()
@@ -33,9 +40,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
-  // Apply Sentry exception filter globally
-  app.useGlobalFilters(new SentryExceptionFilter());
 
   await app.listen(process.env.PORT ?? 3000);
 }

@@ -113,7 +113,7 @@ async function main() {
   await prisma.connectAttendance.create({
     data: {
       group_id: groupAlpha.id,
-      location: 'Community Center A',
+      notes: 'Community Center A',
       photo_url: 'https://example.com/photo1.jpg',
       date: new Date('2024-12-01'),
     },
@@ -122,7 +122,7 @@ async function main() {
   await prisma.connectAttendance.create({
     data: {
       group_id: groupBeta.id,
-      location: 'Community Center B',
+      notes: 'Community Center B',
       photo_url: 'https://example.com/photo2.jpg',
       date: new Date('2024-12-02'),
     },

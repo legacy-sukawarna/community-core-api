@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto, UpdateGroupDto } from './dto/connect-group.dto';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class ConnectGroupService {
@@ -8,6 +9,15 @@ export class ConnectGroupService {
 
   // Create a new Connect Group
   async createGroup(data: CreateGroupDto) {
+    // Check if mentor exists and is a mentor
+    const mentor = await this.prisma.user.findUnique({
+      where: { id: data.mentor_id },
+    });
+
+    if (!mentor || mentor.role !== Role.MENTOR) {
+      throw new NotFoundException('Mentor not found or is not a mentor');
+    }
+
     return this.prisma.group.create({
       data: {
         name: data.name,
@@ -32,7 +42,10 @@ export class ConnectGroupService {
 
   // Get a group by ID
   async getGroupById(id: string) {
-    const group = await this.prisma.group.findUnique({ where: { id } });
+    const group = await this.prisma.group.findUnique({
+      where: { id },
+      include: { mentees: true },
+    });
     if (!group) {
       throw new NotFoundException(`Group with ID ${id} not found`);
     }
@@ -44,6 +57,15 @@ export class ConnectGroupService {
     const group = await this.prisma.group.findUnique({ where: { id } });
     if (!group) {
       throw new NotFoundException(`Group with ID ${id} not found`);
+    }
+
+    // Check if mentor exists and is a mentor
+    const mentor = await this.prisma.user.findUnique({
+      where: { id: data.mentor_id },
+    });
+
+    if (!mentor || mentor.role !== Role.MENTOR) {
+      throw new NotFoundException('Mentor not found or is not a mentor');
     }
 
     return this.prisma.group.update({
