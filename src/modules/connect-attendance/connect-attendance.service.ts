@@ -1,20 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as ExcelJS from 'exceljs';
 import * as path from 'path';
 import * as os from 'os';
+import { CreateAttendanceDto } from './dto/connect-attendance.dto';
+import { SupabaseService } from 'src/services/supabase/supabase.service';
 
 @Injectable()
 export class ConnectAttendanceService {
-  constructor(private readonly prisma: PrismaService) {}
+  logger = new Logger(ConnectAttendanceService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly supabaseService: SupabaseService,
+  ) {}
 
   // Create attendance record
-  createAttendance = async (data: {
-    group_id: string;
-    location?: string;
-    photo_url?: string;
-    date: Date;
-  }) => {
+  createAttendance = async (data: CreateAttendanceDto) => {
     try {
       // Validate group_id exists
       const group = await this.prisma.group.findUnique({
@@ -22,10 +24,33 @@ export class ConnectAttendanceService {
       });
       if (!group) throw new Error('Group not found');
 
-      data.date = new Date(data.date);
+      let photo_url = '';
+
+      // Save photo to cloud storage if provided
+      if (data.photo_file) {
+        const uploaded = await this.supabaseService.uploadFile(
+          'connect-photos',
+          data.photo_file,
+        );
+
+        photo_url = uploaded;
+      }
 
       // Create attendance
-      return await this.prisma.connectAttendance.create({ data });
+      const attendance = await this.prisma.connectAttendance.create({
+        data: {
+          group_id: data.group_id,
+          date: new Date(data.date),
+          photo_url,
+          notes: data.notes,
+        },
+      });
+
+      this.logger.log(
+        `Attendance record created successfully for id ${attendance.id}`,
+      );
+
+      return attendance;
     } catch (error) {
       throw new BadRequestException(error.message);
     }

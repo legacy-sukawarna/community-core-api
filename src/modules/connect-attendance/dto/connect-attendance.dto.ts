@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateAttendanceDto {
@@ -11,7 +12,6 @@ export class CreateAttendanceDto {
   @IsDate()
   date: Date;
 
-  @IsString()
-  @IsOptional()
-  photo_url?: string;
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  photo_file?: any;
 }

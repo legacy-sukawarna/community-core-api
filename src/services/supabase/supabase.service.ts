@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class SupabaseService {
+  logger = new Logger(SupabaseService.name);
+
   private readonly supabase = createClient(
     process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_ANON_KEY || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   );
 
   async getUser(token: string) {
@@ -36,5 +38,26 @@ export class SupabaseService {
     }
 
     return data.session; // Contains new access_token and refresh_token
+  }
+
+  async uploadFile(bucket: string, file: Express.Multer.File) {
+    const { data, error } = await this.supabase.storage
+      .from(bucket)
+      .upload(file.originalname, file.buffer, {
+        contentType: file.mimetype,
+      });
+
+    if (error) {
+      throw new Error(`Failed to upload file: ${error.message}`);
+    }
+
+    this.logger.log(`Uploaded file: ${data}`);
+
+    // Get public URL of the photo
+    const { data: publicUrlData } = this.supabase.storage
+      .from('connect-photos')
+      .getPublicUrl(file.originalname);
+
+    return publicUrlData.publicUrl;
   }
 }

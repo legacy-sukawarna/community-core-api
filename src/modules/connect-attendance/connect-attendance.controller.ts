@@ -9,6 +9,8 @@ import {
   Put,
   Delete,
   Res,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ConnectAttendanceService } from './connect-attendance.service';
@@ -20,12 +22,14 @@ import {
   ApiResponse,
   ApiQuery,
   ApiBody,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { CreateAttendanceDto } from './dto/connect-attendance.dto';
 import { RolesGuard } from 'src/guard/role.guard';
 import { Roles } from 'src/guard/roles.decorator';
 import * as path from 'path';
 import * as fs from 'fs';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('ConnectAttendance')
 @ApiBearerAuth() // Indicates that JWT is required
@@ -37,29 +41,52 @@ export class ConnectAttendanceController {
     private readonly connectAttendanceService: ConnectAttendanceService,
   ) {}
 
+  @Post()
   @ApiOperation({ summary: 'Create an attendance record' })
-  @ApiBody({
-    schema: {
-      example: {
-        group_id: 'group-123',
-        notes: 'Church Hall A',
-        photo_url: 'https://example.com/photo.jpg',
-        date: '2024-01-01T10:00:00Z',
-      },
-    },
-  })
+  @ApiConsumes('multipart/form-data')
   @ApiResponse({
     status: 201,
     description: 'Attendance record created successfully',
   })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        group_id: { type: 'string', example: '12345', description: 'Group ID' },
+        notes: {
+          type: 'string',
+          example: 'New York',
+          description: 'Notes for the attendance',
+        },
+        date: {
+          type: 'string',
+          format: 'date',
+          example: '2024-12-03',
+          description: 'Attendance date',
+        },
+        photo_file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Photo file for documentation',
+        },
+      },
+      required: ['group_id', 'date'],
+    },
+  })
   @Post()
+  @UseInterceptors(FileInterceptor('photo_file')) // Match the field name in the DTO
   async createAttendance(
     @Body()
     body: CreateAttendanceDto,
+    @UploadedFile() photo_file: Express.Multer.File,
   ) {
-    return this.connectAttendanceService.createAttendance(body);
+    return this.connectAttendanceService.createAttendance({
+      ...body,
+      photo_file,
+    });
   }
 
+  @Get()
   @ApiOperation({ summary: 'Get attendance records' })
   @ApiQuery({
     name: 'group_id',
@@ -80,7 +107,6 @@ export class ConnectAttendanceController {
     status: 200,
     description: 'Attendance records retrieved successfully',
   })
-  @Get()
   async getAttendance(
     @Query('group_id') group_id?: string,
     @Query('start_date') start_date?: string,
@@ -93,13 +119,13 @@ export class ConnectAttendanceController {
     });
   }
 
+  @Get(':id')
   @ApiOperation({ summary: 'Get attendance details' })
   @ApiResponse({
     status: 200,
     description: 'Attendance record retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'Attendance record not found' })
-  @Get(':id')
   async getDetails(@Param('id') id: string) {
     return this.connectAttendanceService.getAttendanceDetails(id);
   }
@@ -112,8 +138,8 @@ export class ConnectAttendanceController {
     return await this.connectAttendanceService.updateAttendance(id, body);
   }
 
-  @Roles('ADMIN')
   @Delete(':id')
+  @Roles('ADMIN')
   async delete(@Param('id') id: string) {
     return await this.connectAttendanceService.deleteAttendance(id);
   }
