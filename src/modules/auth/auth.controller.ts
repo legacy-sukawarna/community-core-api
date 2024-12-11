@@ -50,7 +50,7 @@ export class AuthController {
       const { user } = await this.supabaseService.getUser(accessToken);
 
       // Upsert the user in your database
-      const savedUser = await this.userService.upsertUser({
+      const savedUser = await this.userService.insertUser({
         id: user.id,
         email: user.email,
         name: user.user_metadata.full_name || user.email,

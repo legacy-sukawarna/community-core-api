@@ -8,24 +8,30 @@ export class UserService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async upsertUser(userData: {
+  async insertUser(userData: {
     id: string;
     email: string;
     name: string;
     role: Role;
     phone: string;
   }) {
-    return this.prisma.user.upsert({
-      where: { email: userData.email },
-      update: { name: userData.name },
-      create: {
-        id: userData.id,
-        email: userData.email,
-        name: userData.name,
-        role: userData.role || 'MEMBER',
-        phone: userData.phone,
-      },
+    const user = await this.prisma.user.findUnique({
+      where: { id: userData.id },
     });
+
+    if (!user) {
+      return this.prisma.user.create({
+        data: {
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          role: userData.role || 'MEMBER',
+          phone: userData.phone,
+        },
+      });
+    }
+
+    return user;
   }
 
   // Find user by ID
