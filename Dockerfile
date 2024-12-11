@@ -2,7 +2,7 @@
 FROM node:22-alpine
 
 # Install OpenSSL
-RUN apt-get update && apt-get install -y openssl
+RUN apk add --no-cache openssl
 
 # Install pnpm globally
 RUN npm install -g pnpm
