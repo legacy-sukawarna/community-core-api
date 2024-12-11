@@ -1,6 +1,9 @@
 # Use a lightweight Node.js image
 FROM node:22-alpine
 
+# Install OpenSSL
+RUN apt-get update && apt-get install -y openssl
+
 # Install pnpm globally
 RUN npm install -g pnpm
 
