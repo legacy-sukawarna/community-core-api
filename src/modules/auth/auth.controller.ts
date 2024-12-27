@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SupabaseService } from 'src/services/supabase/supabase.service';
-import { UserService } from '../user/user.service';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('Auth') // Group endpoints under 'Auth'
 @Controller('auth')
@@ -18,7 +18,7 @@ export class AuthController {
 
   constructor(
     private readonly supabaseService: SupabaseService,
-    private readonly userService: UserService,
+    private readonly userService: UsersService,
   ) {}
 
   @Get('google')

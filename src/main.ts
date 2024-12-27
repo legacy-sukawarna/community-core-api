@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/node';
 import { SentryLogger } from './logging/logging.service';
 import { VersioningType } from '@nestjs/common';
 import { AllExceptionsFilter } from './lib/filters/all-exceptions.filter';
+import { bootstrapConfig } from './config/bootstrap.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -12,6 +13,14 @@ async function bootstrap() {
       process.env.NODE_ENV === 'development'
         ? ['log', 'debug', 'error', 'verbose', 'warn']
         : ['log', 'error', 'warn'],
+  });
+
+  bootstrapConfig(app);
+
+  app.enableCors({
+    origin: 'http://localhost:3000', // Replace with your frontend origin
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
   });
 
   // Enable versioning

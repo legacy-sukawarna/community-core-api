@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto, UpdateGroupDto } from './dto/connect-group.dto';
 import { Role } from '@prisma/client';
@@ -14,6 +18,15 @@ export class ConnectGroupService {
       where: { id: data.mentor_id },
     });
 
+    //Check if mentor dont have any group
+    const mentorGroups = await this.prisma.group.findMany({
+      where: { mentor_id: data.mentor_id },
+    });
+
+    if (mentorGroups.length > 0) {
+      throw new BadRequestException('Mentor already has a group');
+    }
+
     if (!mentor || mentor.role !== Role.MENTOR) {
       throw new NotFoundException('Mentor not found or is not a mentor');
     }
@@ -22,9 +35,6 @@ export class ConnectGroupService {
       data: {
         name: data.name,
         mentor_id: data.mentor_id,
-        mentees: {
-          connect: data.mentee_id.map((id) => ({ id })),
-        },
       },
     });
   }
@@ -34,6 +44,7 @@ export class ConnectGroupService {
     return this.prisma.group.findMany({
       include: {
         mentees: true,
+        mentor: true,
       },
       where: filter,
       orderBy: { created_at: 'desc' },
@@ -73,9 +84,6 @@ export class ConnectGroupService {
       data: {
         name: data.name,
         mentor_id: data.mentor_id,
-        mentees: {
-          set: data.mentee_id.map((id) => ({ id })),
-        },
       },
     });
   }

@@ -7,13 +7,13 @@ import { SupabaseModule } from './services/supabase/supabase.module';
 import { LoggingModule } from './logging/logging.module';
 import { ConnectAttendanceModule } from './modules/connect-attendance/connect-attendance.module';
 import { ConnectGroupModule } from './modules/connect-group/connect-group.module';
-import { UserModule } from './modules/user/user.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
     PrismaModule,
     AuthModule,
-    UserModule,
+    UsersModule,
     SupabaseModule,
     LoggingModule,
     ConnectAttendanceModule,

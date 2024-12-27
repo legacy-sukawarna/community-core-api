@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { SupabaseModule } from 'src/services/supabase/supabase.module';
 import { LoggingModule } from 'src/logging/logging.module';
-import { UserModule } from '../user/user.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [SupabaseModule, UserModule, LoggingModule],
+  imports: [SupabaseModule, UsersModule, LoggingModule],
   providers: [],
   controllers: [AuthController],
 })

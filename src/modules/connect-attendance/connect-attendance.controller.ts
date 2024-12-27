@@ -73,7 +73,6 @@ export class ConnectAttendanceController {
       required: ['group_id', 'date'],
     },
   })
-  @Post()
   @UseInterceptors(FileInterceptor('photo_file')) // Match the field name in the DTO
   async createAttendance(
     @Body()
@@ -103,6 +102,18 @@ export class ConnectAttendanceController {
     required: false,
     description: 'Filter by end date (inclusive)',
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (default: 1)',
+    type: 'number',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page (default: 10)',
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: 'Attendance records retrieved successfully',
@@ -111,11 +122,15 @@ export class ConnectAttendanceController {
     @Query('group_id') group_id?: string,
     @Query('start_date') start_date?: string,
     @Query('end_date') end_date?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
   ) {
     return this.connectAttendanceService.getAttendance({
       group_id,
       start_date: start_date ? new Date(start_date) : undefined,
       end_date: end_date ? new Date(end_date) : undefined,
+      page: Number(page),
+      limit: Number(limit),
     });
   }
 

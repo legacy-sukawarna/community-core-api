@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserService } from './user.service';
+import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
 
 describe('UserService', () => {
-  let userService: UserService;
+  let userService: UsersService;
   let prismaService: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [UserService, PrismaService],
+      providers: [UsersService, PrismaService],
     }).compile();
 
-    userService = module.get<UserService>(UserService);
+    userService = module.get<UsersService>(UsersService);
     prismaService = module.get<PrismaService>(PrismaService);
   });
 
@@ -25,7 +25,7 @@ describe('UserService', () => {
     } as User;
     jest.spyOn(prismaService.user, 'upsert').mockResolvedValue(mockUser);
 
-    const result = await userService.upsertUser(mockUser);
+    const result = await userService.insertUser(mockUser);
     expect(result).toEqual(mockUser);
   });
 

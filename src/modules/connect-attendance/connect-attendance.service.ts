@@ -126,6 +126,8 @@ export class ConnectAttendanceService {
     group_id?: string;
     start_date?: Date;
     end_date?: Date;
+    page?: number;
+    limit?: number;
   }) {
     if (
       filter.start_date &&
@@ -135,16 +137,50 @@ export class ConnectAttendanceService {
       throw new BadRequestException('Start date must be before end date');
     }
 
-    return this.prisma.connectAttendance.findMany({
-      where: {
-        group_id: filter.group_id,
-        date: {
-          gte: filter.start_date,
-          lte: filter.end_date,
+    const page = filter.page || 1;
+    const limit = filter.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const [records, total] = await Promise.all([
+      this.prisma.connectAttendance.findMany({
+        where: {
+          group_id: filter.group_id,
+          date: {
+            gte: filter.start_date,
+            lte: filter.end_date,
+          },
         },
+        orderBy: { date: 'desc' },
+        include: {
+          group: {
+            include: {
+              mentor: true,
+            },
+          },
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.connectAttendance.count({
+        where: {
+          group_id: filter.group_id,
+          date: {
+            gte: filter.start_date,
+            lte: filter.end_date,
+          },
+        },
+      }),
+    ]);
+
+    return {
+      records,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { date: 'desc' },
-    });
+    };
   }
 
   async generateReport(start_date: Date, end_date: Date) {

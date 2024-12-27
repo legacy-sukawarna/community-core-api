@@ -29,6 +29,7 @@ import { CreateGroupDto, UpdateGroupDto } from './dto/connect-group.dto';
 export class ConnectGroupController {
   constructor(private readonly connectGroupService: ConnectGroupService) {}
 
+  @Post()
   @ApiOperation({ summary: 'Create a new Connect Group' })
   @ApiBody({
     schema: {
@@ -42,11 +43,11 @@ export class ConnectGroupController {
     status: 201,
     description: 'Connect Group created successfully',
   })
-  @Post()
   async createGroup(@Body() body: CreateGroupDto) {
     return this.connectGroupService.createGroup(body);
   }
 
+  @Get()
   @ApiOperation({ summary: 'Get all Connect Groups or filter by leader' })
   @ApiQuery({
     name: 'mentor_id',
@@ -57,13 +58,13 @@ export class ConnectGroupController {
     status: 200,
     description: 'List of Connect Groups retrieved successfully',
   })
-  @Get()
   async getGroups(@Query('mentor_id') mentor_id?: string) {
     return this.connectGroupService.getGroups(
       mentor_id ? { mentor_id } : undefined,
     );
   }
 
+  @Get(':id')
   @ApiOperation({ summary: 'Get a Connect Group by ID' })
   @ApiParam({ name: 'id', description: 'Connect Group ID' })
   @ApiResponse({
@@ -71,18 +72,18 @@ export class ConnectGroupController {
     description: 'Connect Group retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'Connect Group not found' })
-  @Get(':id')
   async getGroupById(@Param('id') id: string) {
     return this.connectGroupService.getGroupById(id);
   }
 
+  @Put(':id')
   @ApiOperation({ summary: 'Update a Connect Group by ID' })
   @ApiParam({ name: 'id', description: 'Connect Group ID' })
   @ApiBody({
     schema: {
       example: {
         name: 'Updated Group Name',
-        leader_id: 'new-leader-123',
+        mentor_id: 'new-leader-123',
       },
     },
   })
@@ -91,11 +92,11 @@ export class ConnectGroupController {
     description: 'Connect Group updated successfully',
   })
   @ApiResponse({ status: 404, description: 'Connect Group not found' })
-  @Put(':id')
   async updateGroup(@Param('id') id: string, @Body() body: UpdateGroupDto) {
     return this.connectGroupService.updateGroup(id, body);
   }
 
+  @Delete(':id')
   @ApiOperation({ summary: 'Delete a Connect Group by ID' })
   @ApiParam({ name: 'id', description: 'Connect Group ID' })
   @ApiResponse({
@@ -103,7 +104,6 @@ export class ConnectGroupController {
     description: 'Connect Group deleted successfully',
   })
   @ApiResponse({ status: 404, description: 'Connect Group not found' })
-  @Delete(':id')
   async deleteGroup(@Param('id') id: string) {
     return this.connectGroupService.deleteGroup(id);
   }
