@@ -35,7 +35,6 @@ export class ConnectGroupController {
     schema: {
       example: {
         name: 'Group Alpha',
-        leader_id: 'user-123',
       },
     },
   })

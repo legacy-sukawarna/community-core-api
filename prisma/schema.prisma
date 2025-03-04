@@ -27,8 +27,8 @@ model User {
 model Group {
   id                 String              @id @default(uuid())
   name               String              @unique
-  mentor_id          String
-  mentor             User                @relation("MentorGroups", fields: [mentor_id], references: [id])
+  mentor_id          String? // Changed from required to optional
+  mentor             User?               @relation("MentorGroups", fields: [mentor_id], references: [id])
   created_at         DateTime            @default(now())
   updated_at         DateTime            @updatedAt
   connect_attendance ConnectAttendance[]

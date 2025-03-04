@@ -13,22 +13,34 @@ export class ConnectGroupService {
 
   // Create a new Connect Group
   async createGroup(data: CreateGroupDto) {
-    // Check if mentor exists and is a mentor
-    const mentor = await this.prisma.user.findUnique({
-      where: { id: data.mentor_id },
-    });
+    // If mentor_id is provided, check if mentor exists and is a mentor
+    if (data.mentor_id) {
+      // Check if mentor exists and is a mentor
+      const mentor = await this.prisma.user.findUnique({
+        where: { id: data.mentor_id },
+      });
 
-    //Check if mentor dont have any group
-    const mentorGroups = await this.prisma.group.findMany({
-      where: { mentor_id: data.mentor_id },
-    });
+      //Check if mentor dont have any group
+      const mentorGroups = await this.prisma.group.findMany({
+        where: { mentor_id: data.mentor_id },
+      });
 
-    if (mentorGroups.length > 0) {
-      throw new BadRequestException('Mentor already has a group');
+      if (mentorGroups.length > 0) {
+        throw new BadRequestException('Mentor already has a group');
+      }
+
+      if (!mentor || mentor.role !== Role.MENTOR) {
+        throw new NotFoundException('Mentor not found or is not a mentor');
+      }
     }
 
-    if (!mentor || mentor.role !== Role.MENTOR) {
-      throw new NotFoundException('Mentor not found or is not a mentor');
+    // Check if name is already taken
+    const existingGroup = await this.prisma.group.findUnique({
+      where: { name: data.name },
+    });
+
+    if (existingGroup) {
+      throw new BadRequestException('Group name already exists');
     }
 
     return this.prisma.group.create({

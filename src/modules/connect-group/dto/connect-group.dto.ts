@@ -11,10 +11,12 @@ export class CreateGroupDto {
   name: string;
 
   @IsString()
+  @IsOptional()
   mentor_id: string;
 
   @IsArray()
   @ArrayNotEmpty()
+  @IsOptional()
   @IsUUID('4', { each: true }) // Assuming IDs are UUIDs
   mentee_id: string[];
 }

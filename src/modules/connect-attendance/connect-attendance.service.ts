@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { CreateAttendanceDto } from './dto/connect-attendance.dto';
 import { SupabaseService } from 'src/services/supabase/supabase.service';
+import * as fs from 'fs';
 
 @Injectable()
 export class ConnectAttendanceService {
@@ -215,9 +216,7 @@ export class ConnectAttendanceService {
         });
 
         return {
-          name: group?.mentor.name ?? 'Unknown',
-          email: group?.mentor.email ?? 'Unknown',
-          gender: group?.mentor.gender ?? 'Unknown',
+          name: group?.name ?? 'Unknown',
           attendance_count: record._count.id,
         };
       }),
@@ -235,15 +234,16 @@ export class ConnectAttendanceService {
 
   async generateExcelSheet(report: any): Promise<string> {
     const workbook = new ExcelJS.Workbook();
+
     // Worksheet 1: Report Summary
     const summarySheet = workbook.addWorksheet('Report Summary');
 
     // Add Report Summary Title
-    summarySheet.mergeCells('A1:B1'); // Merge across relevant columns
+    summarySheet.mergeCells('A1:B1'); // Merge across 2 columns only
     summarySheet.getCell('A1').value = 'Report Summary';
     summarySheet.getCell('A1').font = { bold: true, size: 14 };
 
-    // Add Report Summary Rows
+    // Add Report Summary Rows - keeping only 2 columns
     summarySheet.addRow(['Start Date', report.start_date.toLocaleDateString()]);
     summarySheet.addRow(['End Date', report.end_date.toLocaleDateString()]);
     summarySheet.addRow(['Total Groups', report.totalGroups]);
@@ -256,7 +256,7 @@ export class ConnectAttendanceService {
       `${report.attendancePercentage}%`,
     ]);
 
-    // Adjust column widths for better visibility
+    // Adjust column widths for better visibility - explicitly set to 2 columns
     summarySheet.columns = [
       { width: 25 }, // Column A
       { width: 30 }, // Column B
@@ -265,32 +265,39 @@ export class ConnectAttendanceService {
     // Worksheet 2: Attendance Data
     const attendanceSheet = workbook.addWorksheet('Attendance Data');
 
-    // Add Headers for Attendance Data
+    // Add Headers for Attendance Data - explicitly set to 2 columns
     attendanceSheet.columns = [
-      { header: 'Mentor Name', key: 'name', width: 25 },
-      { header: 'Mentor Email', key: 'email', width: 30 },
-      { header: 'Gender', key: 'gender', width: 15 },
+      { header: 'Group Name', key: 'name', width: 25 },
       { header: 'Attendance Count', key: 'attendance_count', width: 20 },
     ];
 
-    // Add rows
+    // Add rows - each row will have 2 columns based on the data structure
     report.attendance.forEach((record) => {
-      attendanceSheet.addRow(record);
+      attendanceSheet.addRow({
+        name: record.name,
+        attendance_count: record.attendance_count,
+      });
     });
 
     // Format headers
-    const headerRow = attendanceSheet.getRow(1); // Adjust this index based on the rows above
+    const headerRow = attendanceSheet.getRow(1);
     headerRow.font = { bold: true };
 
     const exportsDir = os.tmpdir(); // System temporary directory
 
-    // Save the file
+    // Save the file with proper extension
     const filePath = path.resolve(
       exportsDir,
       `attendance-report-${Date.now()}.xlsx`,
     );
 
+    // Ensure file is written properly
     await workbook.xlsx.writeFile(filePath);
+
+    // Verify file exists before returning
+    if (!fs.existsSync(filePath)) {
+      throw new Error('Failed to generate Excel file');
+    }
 
     return filePath;
   }
