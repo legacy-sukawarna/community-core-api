@@ -6,6 +6,8 @@ import { SentryLogger } from './logging/logging.service';
 import { VersioningType } from '@nestjs/common';
 import { AllExceptionsFilter } from './lib/filters/all-exceptions.filter';
 import { bootstrapConfig } from './config/bootstrap.config';
+import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -17,11 +19,19 @@ async function bootstrap() {
 
   bootstrapConfig(app);
 
+  // Enable CORS
   app.enableCors({
     origin: ['https://legacy-website-chi.vercel.app', 'http://localhost:3000'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
+
+  // Security middleware
+  app.use(helmet());
+
+  // Global validation pipe
+  app.useGlobalPipes(new ValidationPipe());
 
   // Enable versioning
   app.enableVersioning({
@@ -50,6 +60,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
 }
 bootstrap();
