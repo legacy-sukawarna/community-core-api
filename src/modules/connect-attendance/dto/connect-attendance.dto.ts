@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsDate,
   IsNotEmpty,
@@ -18,6 +19,7 @@ export class CreateAttendanceDto {
 
   @IsDate()
   @IsNotEmpty()
+  @Type(() => Date) // This will transform the string to Date
   date: Date;
 
   @ApiProperty({ type: 'string', format: 'binary', required: false })
