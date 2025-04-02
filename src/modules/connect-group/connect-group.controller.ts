@@ -53,13 +53,31 @@ export class ConnectGroupController {
     required: false,
     description: 'Filter by leader ID',
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (default: 1)',
+    type: 'number',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page (default: 10)',
+    type: 'number',
+  })
   @ApiResponse({
     status: 200,
     description: 'List of Connect Groups retrieved successfully',
   })
-  async getGroups(@Query('mentor_id') mentor_id?: string) {
+  async getGroups(
+    @Query('mentor_id') mentor_id?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
     return this.connectGroupService.getGroups(
       mentor_id ? { mentor_id } : undefined,
+      Number(page),
+      Number(limit),
     );
   }
 

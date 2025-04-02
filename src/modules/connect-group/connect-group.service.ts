@@ -52,15 +52,38 @@ export class ConnectGroupService {
   }
 
   // Get all groups or filter by leader ID
-  async getGroups(filter?: { mentor_id?: string }) {
-    return this.prisma.group.findMany({
-      include: {
-        mentees: true,
-        mentor: true,
+  async getGroups(
+    filter?: { mentor_id?: string },
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    const skip = (page - 1) * limit;
+
+    const [groups, total] = await Promise.all([
+      this.prisma.group.findMany({
+        include: {
+          mentees: true,
+          mentor: true,
+        },
+        where: filter,
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.group.count({
+        where: filter,
+      }),
+    ]);
+
+    return {
+      records: groups,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      where: filter,
-      orderBy: { created_at: 'desc' },
-    });
+    };
   }
 
   // Get a group by ID
