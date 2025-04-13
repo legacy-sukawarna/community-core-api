@@ -129,6 +129,8 @@ export class ConnectAttendanceService {
     end_date?: Date;
     page?: number;
     limit?: number;
+    sort_by?: string;
+    sort_order?: string;
   }) {
     if (
       filter.start_date &&
@@ -151,7 +153,9 @@ export class ConnectAttendanceService {
             lte: filter.end_date,
           },
         },
-        orderBy: { date: 'desc' },
+        orderBy: {
+          [filter.sort_by || 'date']: filter.sort_order || 'desc',
+        },
         include: {
           group: {
             include: {

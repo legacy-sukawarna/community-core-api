@@ -124,6 +124,8 @@ export class ConnectAttendanceController {
     @Query('end_date') end_date?: string,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
+    @Query('sort_by') sort_by?: string,
+    @Query('sort_order') sort_order?: string,
   ) {
     return this.connectAttendanceService.getAttendance({
       group_id,
@@ -131,6 +133,8 @@ export class ConnectAttendanceController {
       end_date: end_date ? new Date(end_date) : undefined,
       page: Number(page),
       limit: Number(limit),
+      sort_by,
+      sort_order,
     });
   }
 
