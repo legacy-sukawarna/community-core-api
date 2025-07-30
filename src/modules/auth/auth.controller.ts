@@ -49,18 +49,32 @@ export class AuthController {
 
       const { user } = await this.supabaseService.getUser(accessToken);
 
-      // Upsert the user in your database
-      const savedUser = await this.userService.insertUser({
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata.full_name || user.email,
-        role: 'MEMBER', // Default role for new users
-        phone: user.phone,
-      });
+      const existingUser = await this.userService.findUserById(user.id);
+
+      if (!existingUser) {
+        // Upsert the user in your database
+        const savedUser = await this.userService.insertUser({
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata.full_name || user.email,
+          role: 'MEMBER', // Default role for new users
+          phone: user.phone,
+        });
+
+        return {
+          message: 'Login successful',
+          user: savedUser,
+          profile_pic: user.user_metadata.picture,
+          accessToken,
+          refreshToken,
+          expiresIn,
+          tokenType,
+        };
+      }
 
       return {
         message: 'Login successful',
-        user: savedUser,
+        user: existingUser,
         profile_pic: user.user_metadata.picture,
         accessToken,
         refreshToken,
