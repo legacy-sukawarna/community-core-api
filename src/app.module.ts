@@ -8,6 +8,7 @@ import { LoggingModule } from './logging/logging.module';
 import { ConnectAttendanceModule } from './modules/connect-attendance/connect-attendance.module';
 import { ConnectGroupModule } from './modules/connect-group/connect-group.module';
 import { UsersModule } from './modules/users/users.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UsersModule } from './modules/users/users.module';
     LoggingModule,
     ConnectAttendanceModule,
     ConnectGroupModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
