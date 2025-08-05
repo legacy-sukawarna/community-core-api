@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class SupabaseService {
@@ -14,6 +15,25 @@ export class SupabaseService {
     const { data, error } = await this.supabase.auth.getUser(token);
     if (error) throw new Error(error.message);
     return data;
+  }
+
+  // Decode JWT token locally (without verification for performance)
+  decodeToken(token: string) {
+    try {
+      const decoded = jwt.decode(token) as any;
+      if (!decoded || !decoded.sub) {
+        throw new Error('Invalid JWT token structure');
+      }
+      return {
+        userId: decoded.sub,
+        email: decoded.email,
+        exp: decoded.exp,
+        iat: decoded.iat,
+      };
+    } catch (error) {
+      this.logger.error('Error decoding JWT token:', error);
+      throw error;
+    }
   }
 
   async signInWithOAuth(provider: 'google') {

@@ -1,5 +1,6 @@
 import {
   Body,
+  Post,
   Controller,
   Delete,
   Get,
@@ -22,7 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { RolesGuard } from 'src/guard/role.guard';
 import { Roles } from 'src/guard/roles.decorator';
-import { UpdatedUserDto } from './dto/users.dto';
+import { NewUserDto, UpdatedUserDto } from './dto/users.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -87,6 +88,15 @@ export class UsersController {
     return this.userService.findUserById(id);
   }
 
+  @Post()
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Create a new user' })
+  @ApiBody({ type: NewUserDto })
+  @ApiResponse({ status: 201, description: 'User created successfully' })
+  async createUser(@Body() body: NewUserDto) {
+    return this.userService.insertUser(body);
+  }
+
   @Delete(':id')
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Delete a user by ID' })
@@ -98,6 +108,7 @@ export class UsersController {
   }
 
   @Put(':id')
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Update user data' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiBody({

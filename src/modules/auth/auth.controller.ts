@@ -10,6 +10,7 @@ import {
 import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SupabaseService } from 'src/services/supabase/supabase.service';
 import { UsersService } from '../users/users.service';
+import { Role } from '@prisma/client';
 
 @ApiTags('Auth') // Group endpoints under 'Auth'
 @Controller('auth')
@@ -49,27 +50,37 @@ export class AuthController {
 
       const { user } = await this.supabaseService.getUser(accessToken);
 
-      const existingUser = await this.userService.findUserById(user.id);
+      // First, try to find user by google_id
+      let existingUser = await this.userService.findUserByGoogleId(user.id);
 
       if (!existingUser) {
-        // Upsert the user in your database
-        const savedUser = await this.userService.insertUser({
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata.full_name || user.email,
-          role: 'MEMBER', // Default role for new users
-          phone: user.phone,
-        });
+        // If not found by google_id, check if user exists with same email
+        const userByEmail = await this.userService.findUserByEmail(user.email);
 
-        return {
-          message: 'Login successful',
-          user: savedUser,
-          profile_pic: user.user_metadata.picture,
-          accessToken,
-          refreshToken,
-          expiresIn,
-          tokenType,
-        };
+        if (userByEmail) {
+          // User exists with same email but no google_id (created by admin)
+          // Update the user with google_id and proceed with login
+          this.logger.log(
+            `Linking existing user ${userByEmail.email} with google_id ${user.id}`,
+          );
+          existingUser = await this.userService.updateGoogleId(
+            userByEmail.id,
+            user.id,
+          );
+        } else {
+          // No existing user found, create new user
+          this.logger.log(`Creating new user with email ${user.email}`);
+          const newUser = await this.userService.insertUser({
+            google_id: user.id,
+            email: user.email,
+            name: user.user_metadata.full_name || user.email,
+            role: Role.MEMBER,
+            phone: user.phone,
+          });
+
+          // Fetch the complete user data with relations
+          existingUser = await this.userService.findUserById(newUser.id);
+        }
       }
 
       return {

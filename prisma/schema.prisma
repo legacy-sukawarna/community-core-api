@@ -10,11 +10,12 @@ datasource db {
 
 model User {
   id              String            @id @default(uuid())
+  google_id       String?           @unique
   email           String            @unique
   name            String
   role            Role              @default(MEMBER)
   congregation_id String?
-  phone           String            @db.VarChar(15)
+  phone           String?           @db.VarChar(15)
   created_at      DateTime          @default(now())
   updated_at      DateTime          @updatedAt
   gender          Gender?
@@ -22,6 +23,14 @@ model User {
   group           Group?            @relation("Mentees", fields: [group_id], references: [id])
   EventAttendance EventAttendance[]
   mentoredGroups  Group[]           @relation("MentorGroups")
+  birth_date      DateTime?
+  address         String?
+  is_baptized     Boolean?          @default(false)
+  kom_100         Boolean?          @default(false)
+  encounter       Boolean?          @default(false)
+  establish       Boolean?          @default(false)
+  equip           Boolean?          @default(false)
+  is_committed    Boolean?          @default(false)
 }
 
 model Group {

@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '@prisma/client';
-import { UpdatedUserDto } from './dto/users.dto';
+import { NewUserDto, UpdatedUserDto } from './dto/users.dto';
 
 @Injectable()
 export class UsersService {
@@ -9,33 +9,19 @@ export class UsersService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async insertUser(userData: {
-    id: string;
-    email: string;
-    name: string;
-    role: Role;
-    phone: string;
-  }) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userData.id },
-    });
+  async insertUser(userData: NewUserDto) {
+    const user = await this.findUserByEmail(userData.email);
 
     if (!user) {
       return this.prisma.user.create({
-        data: {
-          id: userData.id,
-          email: userData.email,
-          name: userData.name,
-          role: userData.role || 'MEMBER',
-          phone: userData.phone,
-        },
+        data: userData,
       });
     }
 
     return user;
   }
 
-  // Find user by ID
+  // Find user by internal ID
   async findUserById(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -52,6 +38,38 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
     return user;
+  }
+
+  // Find user by Google ID (Supabase auth ID)
+  async findUserByGoogleId(googleId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { google_id: googleId },
+      include: {
+        mentoredGroups: true,
+        group: {
+          include: {
+            mentor: true,
+          },
+        },
+      },
+    });
+    return user; // Return null if not found (don't throw exception for auth flow)
+  }
+
+  // Update user's google_id
+  async updateGoogleId(userId: string, googleId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { google_id: googleId },
+      include: {
+        mentoredGroups: true,
+        group: {
+          include: {
+            mentor: true,
+          },
+        },
+      },
+    });
   }
 
   // Find user by email
