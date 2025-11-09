@@ -60,11 +60,11 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT || 4000;
+  const port = process.env.PORT || 3000;
 
-  // Listen with proper error handling and port reuse
-  await app.listen(port, () => {
-    console.log(`Application is running on: http://localhost:${port}`);
+  // Listen on 0.0.0.0 for fly.io compatibility
+  await app.listen(port, '0.0.0.0', () => {
+    console.log(`Application is running on: http://0.0.0.0:${port}`);
   });
 }
 
