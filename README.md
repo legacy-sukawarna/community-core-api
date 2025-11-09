@@ -58,6 +58,53 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
+## Development
+
+### Commit Guidelines
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) for standardized commit messages and automated changelog generation.
+
+**Quick Start:**
+
+```bash
+# Use the interactive commit tool (recommended)
+pnpm run commit
+
+# Or manually with format:
+git commit -m "feat: your feature description"
+```
+
+**Commit Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring
+- `docs`: Documentation changes
+- `perf`: Performance improvements
+- `test`: Tests
+- `build`: Build system changes
+- `chore`: Other changes
+
+**Creating a Release:**
+
+```bash
+# Patch release (1.0.0 → 1.0.1)
+pnpm run release
+
+# Minor release (1.0.0 → 1.1.0)
+pnpm run release:minor
+
+# Major release (1.0.0 → 2.0.0)
+pnpm run release:major
+```
+
+This will automatically:
+- Bump the version in `package.json`
+- Generate/update `CHANGELOG.md`
+- Create a git tag
+- Commit the changes
+
+See [AGENTS.md](./AGENTS.md) for detailed development guidelines.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
