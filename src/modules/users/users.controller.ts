@@ -7,6 +7,7 @@ import {
   Param,
   Put,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/modules/auth/auth.guard';
@@ -77,6 +78,19 @@ export class UsersController {
       Number(page),
       Number(limit),
     );
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Get current authenticated user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Current user data retrieved successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getCurrentUser(@Req() request) {
+    // The AuthGuard attaches the user to the request with the database user ID
+    const userId = request.user.id;
+    return this.userService.findUserById(userId);
   }
 
   @Get(':id')
