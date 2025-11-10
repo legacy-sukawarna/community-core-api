@@ -8,7 +8,23 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor(private readonly configService: ConfigService) {
+    // In production, add pgbouncer=true to disable prepared statements
+    const isProduction = configService.get<string>('NODE_ENV') === 'production';
+    const databaseUrl = configService.get<string>('DATABASE_URL');
+
+    let connectionUrl = databaseUrl;
+    if (
+      isProduction &&
+      databaseUrl &&
+      !databaseUrl.includes('pgbouncer=true')
+    ) {
+      connectionUrl = databaseUrl.includes('?')
+        ? `${databaseUrl}&pgbouncer=true`
+        : `${databaseUrl}?pgbouncer=true`;
+    }
+
     super({
+      ...(isProduction && { datasourceUrl: connectionUrl }),
       log: [
         {
           emit: 'event',
