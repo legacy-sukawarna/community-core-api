@@ -829,6 +829,7 @@ fly deploy
 - **Validation**: Use DTOs with class-validator decorators
 - **Database Access**: Inject `PrismaService` in services
 - **Logging**: Inject `Logger` for structured logging
+- **Connect Groups Excel Reports**: Groups are named after mentors (e.g., "Agnes Felisha"). When generating Excel attendance reports, use `group.name` for the "Connect Leader" column, NOT `group.mentor.name`. Each row represents one group with its attendance per month. Use `group_id` as the unique key when building data maps. Do not aggregate multiple groups by mentor name - each group gets its own row.
 
 ---
 
@@ -842,6 +843,6 @@ fly deploy
 
 ---
 
-**Last Updated**: 2025-11-09  
+**Last Updated**: 2025-11-24  
 **Maintained by**: Development Team  
 **For Questions**: Refer to project README.md

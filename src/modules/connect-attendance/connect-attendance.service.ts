@@ -6,6 +6,25 @@ import * as os from 'os';
 import { CreateAttendanceDto } from './dto/connect-attendance.dto';
 import { SupabaseService } from 'src/services/supabase/supabase.service';
 import * as fs from 'fs';
+import {
+  groupAttendanceByMonth,
+  buildGroupsForMonth,
+  calculateAttendancePercentage,
+  countGroupsWithAttendance,
+  getUniqueGroupIds,
+} from './utils/report.utils';
+import {
+  extractMonthNames,
+  buildGroupDataMap,
+  sortGroupsByName,
+  createTitleCell,
+  createHeaderRow,
+  addGroupDataRows,
+  addSummaryRows,
+  setColumnWidths,
+  addBordersToAllCells,
+  highlightSummaryRows,
+} from './utils/excel.utils';
 
 @Injectable()
 export class ConnectAttendanceService {
@@ -189,116 +208,100 @@ export class ConnectAttendanceService {
   }
 
   async generateReport(start_date: Date, end_date: Date) {
-    const attendance = await this.prisma.connectAttendance.groupBy({
-      by: ['group_id'],
-      _count: { id: true }, // Count the attendance entries
-      where: {
-        date: { gte: start_date, lte: end_date },
-      },
-    });
-
-    const totalGroups = await this.prisma.group.count();
-    const groupsWithAttendance = attendance.length;
-    const attendancePercentage = Number(
-      (groupsWithAttendance / totalGroups) * 100,
-    ).toFixed(2);
-
-    const attendanceWithMentor = await Promise.all(
-      attendance.map(async (record) => {
-        const group = await this.prisma.group.findUnique({
-          where: { id: record.group_id },
-          include: {
-            mentor: {
-              // Include mentor details
-              select: {
-                name: true, // Fetch only the mentor's name
-                email: true, // Optionally include more fields if needed
-                gender: true,
-              },
+    // Fetch data
+    const [allAttendance, allGroups] = await Promise.all([
+      this.prisma.connectAttendance.findMany({
+        where: { date: { gte: start_date, lte: end_date } },
+        select: { group_id: true, date: true },
+      }),
+      this.prisma.group.findMany({
+        include: {
+          mentor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              gender: true,
+              phone: true,
             },
           },
-        });
-
-        return {
-          name: group?.name ?? 'Unknown',
-          attendance_count: record._count.id,
-        };
+        },
       }),
-    );
+    ]);
+
+    // Group attendance by month
+    const monthlyData = groupAttendanceByMonth(allAttendance);
+    const sortedMonths = Array.from(monthlyData.keys()).sort();
+
+    // Build monthly attendance structure
+    const monthlyAttendance = sortedMonths.map((monthKey) => {
+      const monthMap = monthlyData.get(monthKey);
+      const groups = buildGroupsForMonth(allGroups, monthMap);
+      const groupsWithAttendanceThisMonth = countGroupsWithAttendance(groups);
+
+      return {
+        month: monthKey,
+        groupsWithAttendance: groupsWithAttendanceThisMonth,
+        attendancePercentage: calculateAttendancePercentage(
+          groupsWithAttendanceThisMonth,
+          allGroups.length,
+        ),
+        groups,
+      };
+    });
+
+    // Calculate overall statistics
+    const totalGroups = allGroups.length;
+    const uniqueGroupsWithAttendance = getUniqueGroupIds(allAttendance).size;
 
     return {
       start_date,
       end_date,
       totalGroups,
-      groupsWithAttendance,
-      attendancePercentage,
-      attendance: attendanceWithMentor,
+      groupsWithAttendance: uniqueGroupsWithAttendance,
+      attendancePercentage: calculateAttendancePercentage(
+        uniqueGroupsWithAttendance,
+        totalGroups,
+      ),
+      monthlyAttendance,
     };
   }
 
   async generateExcelSheet(report: any): Promise<string> {
     const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Attendance Report');
 
-    // Worksheet 1: Report Summary
-    const summarySheet = workbook.addWorksheet('Report Summary');
+    // Prepare data
+    const months = extractMonthNames(report.monthlyAttendance);
+    const groupData = buildGroupDataMap(
+      report.monthlyAttendance,
+      months.length,
+    );
+    const sortedGroups = sortGroupsByName(groupData);
 
-    // Add Report Summary Title
-    summarySheet.mergeCells('A1:B1'); // Merge across 2 columns only
-    summarySheet.getCell('A1').value = 'Report Summary';
-    summarySheet.getCell('A1').font = { bold: true, size: 14 };
+    // Build sheet structure
+    createTitleCell(sheet, months.length + 1);
+    createHeaderRow(sheet, months);
 
-    // Add Report Summary Rows - keeping only 2 columns
-    summarySheet.addRow(['Start Date', report.start_date.toLocaleDateString()]);
-    summarySheet.addRow(['End Date', report.end_date.toLocaleDateString()]);
-    summarySheet.addRow(['Total Groups', report.totalGroups]);
-    summarySheet.addRow([
-      'Groups With Attendance',
-      report.groupsWithAttendance,
-    ]);
-    summarySheet.addRow([
-      'Attendance Percentage',
-      `${report.attendancePercentage}%`,
-    ]);
+    // Add data rows
+    let currentRow = addGroupDataRows(sheet, sortedGroups, 3);
+    const summaryStartRow = currentRow;
+    currentRow = addSummaryRows(sheet, report, months, currentRow);
 
-    // Adjust column widths for better visibility - explicitly set to 2 columns
-    summarySheet.columns = [
-      { width: 25 }, // Column A
-      { width: 30 }, // Column B
-    ];
+    // Apply styling
+    setColumnWidths(sheet, months.length);
+    addBordersToAllCells(sheet, currentRow, months.length + 1);
+    highlightSummaryRows(sheet, summaryStartRow, currentRow, months.length + 1);
 
-    // Worksheet 2: Attendance Data
-    const attendanceSheet = workbook.addWorksheet('Attendance Data');
-
-    // Add Headers for Attendance Data - explicitly set to 2 columns
-    attendanceSheet.columns = [
-      { header: 'Group Name', key: 'name', width: 25 },
-      { header: 'Attendance Count', key: 'attendance_count', width: 20 },
-    ];
-
-    // Add rows - each row will have 2 columns based on the data structure
-    report.attendance.forEach((record) => {
-      attendanceSheet.addRow({
-        name: record.name,
-        attendance_count: record.attendance_count,
-      });
-    });
-
-    // Format headers
-    const headerRow = attendanceSheet.getRow(1);
-    headerRow.font = { bold: true };
-
-    const exportsDir = os.tmpdir(); // System temporary directory
-
-    // Save the file with proper extension
+    // Save file
+    const exportsDir = os.tmpdir();
     const filePath = path.resolve(
       exportsDir,
       `attendance-report-${Date.now()}.xlsx`,
     );
 
-    // Ensure file is written properly
     await workbook.xlsx.writeFile(filePath);
 
-    // Verify file exists before returning
     if (!fs.existsSync(filePath)) {
       throw new Error('Failed to generate Excel file');
     }
