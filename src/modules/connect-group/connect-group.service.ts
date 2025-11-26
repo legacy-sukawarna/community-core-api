@@ -20,9 +20,12 @@ export class ConnectGroupService {
         where: { id: data.mentor_id },
       });
 
-      //Check if mentor dont have any group
+      //Check if mentor dont have any active (non-deleted) group
       const mentorGroups = await this.prisma.group.findMany({
-        where: { mentor_id: data.mentor_id },
+        where: {
+          mentor_id: data.mentor_id,
+          deleted_at: null, // Only check active groups
+        },
       });
 
       if (mentorGroups.length > 0) {
@@ -34,9 +37,12 @@ export class ConnectGroupService {
       }
     }
 
-    // Check if name is already taken
-    const existingGroup = await this.prisma.group.findUnique({
-      where: { name: data.name },
+    // Check if name is already taken by an active (non-deleted) group
+    const existingGroup = await this.prisma.group.findFirst({
+      where: {
+        name: data.name,
+        deleted_at: null, // Only check active groups
+      },
     });
 
     if (existingGroup) {
@@ -59,19 +65,25 @@ export class ConnectGroupService {
   ) {
     const skip = (page - 1) * limit;
 
+    // Add deleted_at: null filter to exclude soft-deleted groups
+    const whereClause = {
+      ...filter,
+      deleted_at: null,
+    };
+
     const [groups, total] = await Promise.all([
       this.prisma.group.findMany({
         include: {
           mentees: true,
           mentor: true,
         },
-        where: filter,
+        where: whereClause,
         orderBy: { created_at: 'desc' },
         skip,
         take: limit,
       }),
       this.prisma.group.count({
-        where: filter,
+        where: whereClause,
       }),
     ]);
 
@@ -88,8 +100,11 @@ export class ConnectGroupService {
 
   // Get a group by ID
   async getGroupById(id: string) {
-    const group = await this.prisma.group.findUnique({
-      where: { id },
+    const group = await this.prisma.group.findFirst({
+      where: {
+        id,
+        deleted_at: null, // Exclude soft-deleted groups
+      },
       include: { mentees: true },
     });
     if (!group) {
@@ -100,7 +115,11 @@ export class ConnectGroupService {
 
   // Update a group by ID
   async updateGroup(id: string, data: UpdateGroupDto) {
-    const group = await this.prisma.group.findUnique({ where: { id } });
+    const group = await this.prisma.group.findFirst({
+      where: {
+        id,
+      },
+    });
     if (!group) {
       throw new NotFoundException(`Group with ID ${id} not found`);
     }
@@ -123,8 +142,23 @@ export class ConnectGroupService {
     });
   }
 
-  // Delete a group by ID
+  // Soft delete a group by ID
   async deleteGroup(id: string) {
-    return this.prisma.group.delete({ where: { id } });
+    const group = await this.prisma.group.findFirst({
+      where: {
+        id,
+        deleted_at: null, // Can only soft-delete non-deleted groups
+      },
+    });
+
+    if (!group) {
+      throw new NotFoundException(`Group with ID ${id} not found`);
+    }
+
+    // Soft delete by setting deleted_at timestamp
+    return this.prisma.group.update({
+      where: { id },
+      data: { deleted_at: new Date() },
+    });
   }
 }

@@ -226,6 +226,7 @@ export class ConnectAttendanceService {
             },
           },
         },
+        where: { deleted_at: null },
       }),
     ]);
 
