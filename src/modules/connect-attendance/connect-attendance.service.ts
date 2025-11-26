@@ -11,7 +11,6 @@ import {
   buildGroupsForMonth,
   calculateAttendancePercentage,
   countGroupsWithAttendance,
-  getUniqueGroupIds,
 } from './utils/report.utils';
 import {
   extractMonthNames,
@@ -253,17 +252,11 @@ export class ConnectAttendanceService {
 
     // Calculate overall statistics
     const totalGroups = allGroups.length;
-    const uniqueGroupsWithAttendance = getUniqueGroupIds(allAttendance).size;
 
     return {
       start_date,
       end_date,
       totalGroups,
-      groupsWithAttendance: uniqueGroupsWithAttendance,
-      attendancePercentage: calculateAttendancePercentage(
-        uniqueGroupsWithAttendance,
-        totalGroups,
-      ),
       monthlyAttendance,
     };
   }

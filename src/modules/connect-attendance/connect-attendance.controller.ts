@@ -138,33 +138,24 @@ export class ConnectAttendanceController {
     });
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get attendance details' })
+  @Get('/report/data')
+  @ApiOperation({ summary: 'Get report data' })
   @ApiResponse({
     status: 200,
-    description: 'Attendance record retrieved successfully',
+    description: 'Report data retrieved successfully',
   })
-  @ApiResponse({ status: 404, description: 'Attendance record not found' })
-  async getDetails(@Param('id') id: string) {
-    return this.connectAttendanceService.getAttendanceDetails(id);
-  }
-
-  @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() body: { notes?: string; photo_url?: string; date?: Date },
+  async getReport(
+    @Query('start_date') start_date: string,
+    @Query('end_date') end_date: string,
   ) {
-    return await this.connectAttendanceService.updateAttendance(id, body);
-  }
-
-  @Delete(':id')
-  @Roles('ADMIN')
-  async delete(@Param('id') id: string) {
-    return await this.connectAttendanceService.deleteAttendance(id);
+    return await this.connectAttendanceService.generateReport(
+      new Date(start_date),
+      new Date(end_date),
+    );
   }
 
   @Get('/report/generate')
-  async getReport(
+  async generateReport(
     @Query('start_date') start_date: string,
     @Query('end_date') end_date: string,
     @Query('format') format: 'pdf' | 'sheet',
@@ -206,5 +197,30 @@ export class ConnectAttendanceController {
     }
 
     return res.status(400).json({ message: 'Invalid format' });
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get attendance details' })
+  @ApiResponse({
+    status: 200,
+    description: 'Attendance record retrieved successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Attendance record not found' })
+  async getDetails(@Param('id') id: string) {
+    return this.connectAttendanceService.getAttendanceDetails(id);
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() body: { notes?: string; photo_url?: string; date?: Date },
+  ) {
+    return await this.connectAttendanceService.updateAttendance(id, body);
+  }
+
+  @Delete(':id')
+  @Roles('ADMIN')
+  async delete(@Param('id') id: string) {
+    return await this.connectAttendanceService.deleteAttendance(id);
   }
 }

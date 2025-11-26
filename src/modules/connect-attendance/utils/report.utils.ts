@@ -94,12 +94,3 @@ export const countGroupsWithAttendance = (
 ): number => {
   return groups.filter((g) => g.attendance_count > 0).length;
 };
-
-/**
- * Gets unique group IDs from attendance records
- */
-export const getUniqueGroupIds = (
-  attendanceRecords: Array<{ group_id: string }>,
-): Set<string> => {
-  return new Set(attendanceRecords.map((a) => a.group_id));
-};
