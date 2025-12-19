@@ -40,8 +40,8 @@ RUN npm install -g prisma
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
-# Copy generated Prisma client from builder
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+# Generate Prisma client for runtime environment
+RUN prisma generate
 
 EXPOSE 3000
 
