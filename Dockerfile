@@ -31,7 +31,7 @@ ENV NODE_ENV=production
 
 # Copy only production deps
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Copy built output + prisma
 COPY --from=builder /app/dist ./dist
