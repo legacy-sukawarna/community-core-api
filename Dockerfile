@@ -34,7 +34,7 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Install prisma CLI globally for migrations
-RUN pnpm add -g prisma
+RUN npm install -g prisma
 
 # Copy built output + prisma schema
 COPY --from=builder /app/dist ./dist
