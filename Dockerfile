@@ -33,8 +33,8 @@ ENV NODE_ENV=production
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
-# Install prisma CLI globally for migrations
-RUN npm install -g prisma
+# Install prisma CLI globally for migrations (match project version)
+RUN npm install -g prisma@6
 
 # Copy built output + prisma schema
 COPY --from=builder /app/dist ./dist
