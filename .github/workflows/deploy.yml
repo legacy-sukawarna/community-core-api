@@ -41,5 +41,5 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /var/www/community-core-api
-            docker compose pull
-            docker compose up -d
+            docker compose pull api
+            docker compose up -d api
