@@ -1,32 +1,42 @@
-# Use a lightweight Node.js image
-FROM node:22-alpine
+# ======================
+# Build stage
+# ======================
+FROM node:22-alpine AS builder
 
-# Install OpenSSL
 RUN apk add --no-cache openssl
-
-# Install pnpm globally
 RUN npm install -g pnpm
 
-# Set working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy package.json and pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies using pnpm
 RUN pnpm install --frozen-lockfile
 
-# Copy the rest of the application code
 COPY . .
 
-# Generate Prisma Client
 RUN pnpm prisma generate
-
-# Build the application
 RUN pnpm build
 
-# Expose the application port
+
+# ======================
+# Runtime stage
+# ======================
+FROM node:22-alpine
+
+RUN apk add --no-cache openssl
+RUN npm install -g pnpm
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy only production deps
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy built output + prisma
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+
 EXPOSE 3000
 
-# Start the application
-CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm start:prod"]
+CMD ["sh", "-c", "pnpm prisma migrate deploy && node dist/main.js"]
