@@ -23,17 +23,16 @@ RUN pnpm build
 FROM node:22-alpine
 
 RUN apk add --no-cache openssl
-RUN npm install -g pnpm
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy only production deps
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+# Copy package.json and use npm for flat node_modules (works better with prisma)
+COPY package.json ./
+RUN npm install --omit=dev --ignore-scripts
 
-# Install prisma CLI globally for migrations (match project version)
+# Install prisma CLI for migrations (match project version)
 RUN npm install -g prisma@6
 
 # Copy built output + prisma schema
