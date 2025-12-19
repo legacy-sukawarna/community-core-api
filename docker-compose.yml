@@ -11,7 +11,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     networks:
-      - traefik-public
+      - n8n_default
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.community-api.rule=Host(`community-api.srv1208734.hstgr.cloud`)"
@@ -33,7 +33,7 @@ services:
       - db_data:/var/lib/postgresql/data
 
 networks:
-  traefik-public:
+  n8n_default:
     external: true
 
 volumes:
