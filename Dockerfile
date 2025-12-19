@@ -44,4 +44,4 @@ RUN prisma generate
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "prisma migrate deploy && node dist/src/main.js"]
