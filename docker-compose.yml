@@ -1,6 +1,15 @@
-version: '3.9'
+version: "3.9"
 
 services:
+  api:
+    build: .
+    container_name: community-core-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:3000:3000"
+
   db:
     image: postgres:14
     container_name: community-core-db
@@ -10,15 +19,9 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: community-core
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-
-  adminer:
-    image: adminer
-    container_name: community-core-adminer
-    ports:
-      - '8080:8080'
 
 volumes:
   db_data:
