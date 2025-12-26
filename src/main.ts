@@ -69,6 +69,7 @@ async function bootstrap() {
   // Listen on 0.0.0.0 for fly.io compatibility
   await app.listen(port, '0.0.0.0', () => {
     console.log(`Application is running on: http://0.0.0.0:${port}`);
+    console.log('Modules loaded successfully');
   });
 }
 
