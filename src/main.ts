@@ -3,7 +3,6 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/node';
 import { SentryLogger } from './logging/logging.service';
-import { VersioningType } from '@nestjs/common';
 import { AllExceptionsFilter } from './lib/filters/all-exceptions.filter';
 import { bootstrapConfig } from './config/bootstrap.config';
 import { ValidationPipe } from '@nestjs/common';
@@ -21,9 +20,13 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: ['https://legacy-website-chi.vercel.app', 'http://localhost:3000'],
+    origin: [
+      'https://legacy-website-chi.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:3001',
+    ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
@@ -33,10 +36,11 @@ async function bootstrap() {
   // Global validation pipe
   app.useGlobalPipes(new ValidationPipe());
 
-  // Enable versioning
-  app.enableVersioning({
-    type: VersioningType.URI, // This will add /v1, /v2 etc. to URLs
-  });
+  // Versioning disabled for now - can be enabled later if needed
+  // app.enableVersioning({
+  //   type: VersioningType.URI,
+  //   defaultVersion: '1',
+  // });
 
   if (process.env.NODE_ENV !== 'development') {
     Sentry.init({
@@ -60,7 +64,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3001;
 
   // Listen on 0.0.0.0 for fly.io compatibility
   await app.listen(port, '0.0.0.0', () => {

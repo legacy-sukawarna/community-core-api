@@ -31,6 +31,7 @@ model User {
   establish       Boolean?          @default(false)
   equip           Boolean?          @default(false)
   is_committed    Boolean?          @default(false)
+  posts           Post[]            @relation("AuthorPosts")
 }
 
 model Group {
@@ -87,9 +88,49 @@ enum Role {
   ADMIN
   MENTOR
   MEMBER
+  WRITER
 }
 
 enum Gender {
   MALE
   FEMALE
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Package {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  slug        String   @unique
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  posts       Post[]
+
+  @@index([slug])
+}
+
+model Post {
+  id             String     @id @default(uuid())
+  title          String
+  slug           String     @unique
+  content        String     @db.Text
+  excerpt        String?
+  featured_image String?
+  status         PostStatus @default(DRAFT)
+  package_id     String
+  package        Package    @relation(fields: [package_id], references: [id])
+  author_id      String
+  author         User       @relation("AuthorPosts", fields: [author_id], references: [id])
+  published_at   DateTime?
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+
+  @@index([slug])
+  @@index([package_id])
+  @@index([author_id])
+  @@index([status])
 }

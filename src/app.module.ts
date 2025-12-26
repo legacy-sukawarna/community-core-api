@@ -9,6 +9,7 @@ import { ConnectAttendanceModule } from './modules/connect-attendance/connect-at
 import { ConnectGroupModule } from './modules/connect-group/connect-group.module';
 import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health/health.module';
+import { BlogModule } from './modules/blog/blog.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { HealthModule } from './modules/health/health.module';
     ConnectAttendanceModule,
     ConnectGroupModule,
     HealthModule,
+    BlogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

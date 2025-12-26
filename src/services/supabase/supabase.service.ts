@@ -73,9 +73,9 @@ export class SupabaseService {
 
     this.logger.log(`Uploaded file: ${data}`);
 
-    // Get public URL of the photo
+    // Get public URL of the photo using the correct bucket
     const { data: publicUrlData } = this.supabase.storage
-      .from('connect-photos')
+      .from(bucket)
       .getPublicUrl(file.originalname);
 
     return publicUrlData.publicUrl;
