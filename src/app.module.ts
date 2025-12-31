@@ -10,6 +10,7 @@ import { ConnectGroupModule } from './modules/connect-group/connect-group.module
 import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health/health.module';
 import { BlogModule } from './modules/blog/blog.module';
+import { EventNoticeModule } from './modules/event-notice/event-notice.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { BlogModule } from './modules/blog/blog.module';
     ConnectGroupModule,
     HealthModule,
     BlogModule,
+    EventNoticeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

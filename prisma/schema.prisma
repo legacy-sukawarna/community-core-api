@@ -32,6 +32,7 @@ model User {
   equip           Boolean?          @default(false)
   is_committed    Boolean?          @default(false)
   posts           Post[]            @relation("AuthorPosts")
+  eventNotices    EventNotice[]     @relation("AuthorEventNotices")
 }
 
 model Group {
@@ -89,6 +90,7 @@ enum Role {
   MENTOR
   MEMBER
   WRITER
+  EVENT_MANAGER
 }
 
 enum Gender {
@@ -99,6 +101,16 @@ enum Gender {
 enum PostStatus {
   DRAFT
   PUBLISHED
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum EventLinkType {
+  INTERNAL
+  EXTERNAL
 }
 
 model Package {
@@ -133,4 +145,23 @@ model Post {
   @@index([package_id])
   @@index([author_id])
   @@index([status])
+}
+
+model EventNotice {
+  id           String        @id @default(uuid())
+  title        String
+  description  String?       @db.Text
+  poster_url   String?
+  link         String?
+  link_type    EventLinkType @default(INTERNAL)
+  status       EventStatus   @default(DRAFT)
+  author_id    String
+  author       User          @relation("AuthorEventNotices", fields: [author_id], references: [id])
+  published_at DateTime?
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+
+  @@index([status])
+  @@index([author_id])
+  @@index([published_at])
 }

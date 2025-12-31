@@ -22,7 +22,16 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (!user || !requiredRoles.includes(user.role)) {
+    if (!user) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    // ADMIN has access to all roles/endpoints
+    if (user.role === 'ADMIN') {
+      return true;
+    }
+
+    if (!requiredRoles.includes(user.role)) {
       throw new ForbiddenException('Access denied');
     }
 
