@@ -11,6 +11,7 @@ import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health/health.module';
 import { BlogModule } from './modules/blog/blog.module';
 import { EventNoticeModule } from './modules/event-notice/event-notice.module';
+import { EmailModule } from './modules/email/email.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { EventNoticeModule } from './modules/event-notice/event-notice.module';
     HealthModule,
     BlogModule,
     EventNoticeModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

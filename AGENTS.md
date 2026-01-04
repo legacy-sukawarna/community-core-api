@@ -538,8 +538,11 @@ export class UsersService {
 
 ## Development Commands
 
+> **⚠️ IMPORTANT**: This project uses **pnpm** as the package manager. Do NOT use npm or yarn.
+> If you don't have pnpm installed, run: `npm install -g pnpm`
+
 ```bash
-# Install dependencies
+# Install dependencies (always use pnpm!)
 pnpm install
 
 # Development
@@ -812,6 +815,17 @@ fly deploy
 
 ## Quick Reference
 
+### Package Manager
+
+**Always use pnpm** for this project:
+
+```bash
+pnpm install          # Install dependencies
+pnpm add <package>    # Add a package
+pnpm remove <package> # Remove a package
+pnpm run <script>     # Run a script
+```
+
 ### Key Files
 
 - `main.ts` - Application bootstrap & configuration
@@ -843,6 +857,6 @@ fly deploy
 
 ---
 
-**Last Updated**: 2025-11-24  
+**Last Updated**: 2026-01-04  
 **Maintained by**: Development Team  
 **For Questions**: Refer to project README.md
