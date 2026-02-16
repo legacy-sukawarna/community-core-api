@@ -772,20 +772,40 @@ http://localhost:3001/api
 - [ ] Configure CORS for production domain
 - [ ] Set up health check monitoring
 
-### Docker Deployment
+### Docker Deployment (Local)
 
-```dockerfile
+```bash
 # Dockerfile is included in the project
 docker build -t community-core-api .
 docker run -p 3001:3001 --env-file .env community-core-api
 ```
 
-### Fly.io Deployment
+### VPS Deployment (Production)
 
+The backend is deployed on a VPS at `https://community-api.dokimos.my.id`.
+
+**Deployment steps:**
+1. SSH into the VPS
+2. Pull latest changes: `git pull origin main`
+3. Rebuild and restart the container:
+   ```bash
+   docker build -t community-core-api .
+   docker stop community-core-api || true
+   docker rm community-core-api || true
+   docker run -d --name community-core-api -p 3001:3001 --env-file .env community-core-api
+   ```
+
+**Or with Docker Compose** (if configured):
 ```bash
-# fly.toml is configured
-fly deploy
+docker-compose down
+docker-compose up -d --build
 ```
+
+**When deploying, ensure:**
+1. All environment variables are set in `.env` on the VPS
+2. Database migrations run before the app starts (handled in Dockerfile CMD)
+3. CORS origins in `src/main.ts` include your frontend domain(s)
+4. Reverse proxy (nginx/caddy) is configured to proxy to port 3001
 
 ---
 
@@ -805,7 +825,33 @@ fly deploy
 
 ### Issue: CORS errors
 
-**Solution**: Add frontend URL to CORS whitelist in `main.ts`
+**Solution**: Add frontend URL to CORS whitelist in `src/main.ts`
+
+The CORS configuration is located in `src/main.ts` in the `app.enableCors()` call. When adding a new frontend domain:
+
+1. Open `src/main.ts`
+2. Find the `origin` array in `app.enableCors()`
+3. Add both `www` and non-`www` versions of the domain
+4. Redeploy the backend
+
+```typescript
+app.enableCors({
+  origin: [
+    'https://legacy-website-chi.vercel.app',
+    'https://www.sukawarna-legacy.web.id',  // Production frontend
+    'https://sukawarna-legacy.web.id',       // Without www
+    'http://localhost:3000',                 // Local frontend dev
+    'http://localhost:3001',                 // Local alternative
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+});
+```
+
+**When changing domains**, also update:
+- Supabase Dashboard → Authentication → URL Configuration → Redirect URLs
+- Frontend `NEXT_PUBLIC_SITE_URL` environment variable
 
 ### Issue: Database connection timeout
 
