@@ -22,6 +22,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'https://legacy-website-chi.vercel.app',
+      'https://www.sukawarna-legacy.web.id',
+      'https://sukawarna-legacy.web.id',
       'http://localhost:3000',
       'http://localhost:3001',
     ],
